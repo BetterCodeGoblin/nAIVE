@@ -12,5 +12,6 @@ project/assets/meshes/*.glb
 project/assets/meshes/*.png
 assets/audio/
 
-# Keep meshy_car.glb (embedded in demo binary, ~1MB)
+# Keep GLBs embedded in demo binary
 !project/assets/meshes/meshy_car.glb
+!project/assets/meshes/submarine.glb

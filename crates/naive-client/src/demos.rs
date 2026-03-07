@@ -343,6 +343,21 @@ static DEMOS: &[DemoEntry] = &[
             ("meshy_car.glb", include_bytes!("../../../project/assets/meshes/meshy_car.glb")),
         ],
     },
+    DemoEntry {
+        number: 17,
+        slug: "submarine",
+        name: "Submarine + Ball Rain",
+        description: "Textured GLB submarine with physics ball rain",
+        category: "AI",
+        scene_filename: "submarine_demo.yaml",
+        scene_content: include_str!("../../../project/scenes/submarine_demo.yaml"),
+        scripts: &[
+            ("submarine_demo.lua", include_str!("../../../project/logic/submarine_demo.lua")),
+        ],
+        mesh_assets: &[
+            ("submarine.glb", include_bytes!("../../../project/assets/meshes/submarine.glb")),
+        ],
+    },
 ];
 
 // ---------------------------------------------------------------------------
