@@ -57,9 +57,10 @@ pub struct DrawUniforms {
     pub base_color: [f32; 4],
     pub roughness: f32,
     pub metallic: f32,
-    pub _pad: [f32; 2],
+    pub has_texture: f32,
+    pub _pad: f32,
     pub emission: [f32; 4],
-    // Pad to 256 bytes total: 64+64+16+8+8+16 = 176, need 80 more bytes = 20 floats
+    // Pad to 256 bytes total: 64+64+16+16+16 = 176, need 80 more bytes = 20 floats
     pub _padding: [f32; 20],
 }
 
@@ -353,15 +354,22 @@ pub fn create_forward_pipeline(
     format: wgpu::TextureFormat,
     camera_bind_group_layout: &wgpu::BindGroupLayout,
     draw_bind_group_layout: &wgpu::BindGroupLayout,
+    texture_bind_group_layout: Option<&wgpu::BindGroupLayout>,
 ) -> wgpu::RenderPipeline {
     let shader_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: Some("Forward Shader"),
         source: wgpu::ShaderSource::Wgsl(wgsl_source.into()),
     });
 
+    let layouts: Vec<&wgpu::BindGroupLayout> = if let Some(tex_layout) = texture_bind_group_layout {
+        vec![camera_bind_group_layout, draw_bind_group_layout, tex_layout]
+    } else {
+        vec![camera_bind_group_layout, draw_bind_group_layout]
+    };
+
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: Some("Forward Pipeline Layout"),
-        bind_group_layouts: &[camera_bind_group_layout, draw_bind_group_layout],
+        bind_group_layouts: &layouts,
         push_constant_ranges: &[],
     });
 
@@ -474,6 +482,7 @@ pub fn render_scene_to_view(
     forward_pipeline: &wgpu::RenderPipeline,
     view: &wgpu::TextureView,
     encoder: &mut wgpu::CommandEncoder,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) {
     // Write per-draw uniforms (skip hidden entities before incrementing draw_index)
     let mut draw_index = 0u32;
@@ -486,6 +495,8 @@ pub fn render_scene_to_view(
         let material = material_cache.get(mesh_renderer.material_handle);
         let model_matrix = transform.world_matrix;
         let normal_matrix = model_matrix.inverse().transpose();
+        let gpu_mesh = mesh_cache.get(mesh_renderer.mesh_handle);
+        let has_texture = if gpu_mesh.texture_bind_group.is_some() { 1.0f32 } else { 0.0f32 };
 
         let draw_uniform = DrawUniforms {
             model_matrix: model_matrix.to_cols_array_2d(),
@@ -493,7 +504,8 @@ pub fn render_scene_to_view(
             base_color: material.uniform.base_color,
             roughness: material.uniform.roughness,
             metallic: material.uniform.metallic,
-            _pad: [0.0; 2],
+            has_texture,
+            _pad: 0.0,
             emission: material.uniform.emission,
             _padding: [0.0; 20],
         };
@@ -548,6 +560,14 @@ pub fn render_scene_to_view(
             let dynamic_offset = draw_index * DRAW_UNIFORM_SIZE as u32;
 
             render_pass.set_bind_group(1, &draw_pool.bind_group, &[dynamic_offset]);
+
+            // Bind texture at group(2): use mesh's texture or fallback to white
+            if let Some(tex_res) = texture_resources {
+                let tex_bg = gpu_mesh.texture_bind_group.as_ref()
+                    .unwrap_or(&tex_res.default_bind_group);
+                render_pass.set_bind_group(2, tex_bg, &[]);
+            }
+
             render_pass.set_vertex_buffer(0, gpu_mesh.vertex_buffer.slice(..));
             render_pass.set_index_buffer(
                 gpu_mesh.index_buffer.slice(..),

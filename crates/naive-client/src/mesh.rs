@@ -60,6 +60,143 @@ pub struct GpuMesh {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub index_count: u32,
+    /// Texture bind group for GLB albedo texture (None = no texture).
+    pub texture_bind_group: Option<wgpu::BindGroup>,
+}
+
+/// Shared texture resources: bind group layout and 1x1 white fallback.
+pub struct TextureResources {
+    pub bind_group_layout: wgpu::BindGroupLayout,
+    pub default_bind_group: wgpu::BindGroup,
+}
+
+impl TextureResources {
+    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
+        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("Texture Bind Group Layout"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
+            ],
+        });
+
+        // Create 1x1 white fallback texture
+        let white_pixel: [u8; 4] = [255, 255, 255, 255];
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("White 1x1 Fallback"),
+            size: wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+        queue.write_texture(
+            wgpu::TexelCopyTextureInfo {
+                texture: &texture, mip_level: 0,
+                origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All,
+            },
+            &white_pixel,
+            wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(4), rows_per_image: Some(1) },
+            wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 },
+        );
+        let view = texture.create_view(&Default::default());
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            ..Default::default()
+        });
+        let default_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Default White Texture BG"),
+            layout: &bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&view) },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(&sampler) },
+            ],
+        });
+
+        Self { bind_group_layout, default_bind_group }
+    }
+}
+
+fn create_texture_bind_group(
+    device: &wgpu::Device,
+    queue: &wgpu::Queue,
+    image_data: &gltf::image::Data,
+    layout: &wgpu::BindGroupLayout,
+) -> wgpu::BindGroup {
+    // Ensure RGBA8 format
+    let (rgba_pixels, width, height) = match image_data.format {
+        gltf::image::Format::R8G8B8A8 => {
+            (image_data.pixels.clone(), image_data.width, image_data.height)
+        }
+        gltf::image::Format::R8G8B8 => {
+            let rgba: Vec<u8> = image_data.pixels.chunks(3)
+                .flat_map(|rgb| [rgb[0], rgb[1], rgb[2], 255])
+                .collect();
+            (rgba, image_data.width, image_data.height)
+        }
+        _ => {
+            // Fallback: try to use as RGBA
+            (image_data.pixels.clone(), image_data.width, image_data.height)
+        }
+    };
+
+    let texture = device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("GLB Albedo Texture"),
+        size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        view_formats: &[],
+    });
+
+    queue.write_texture(
+        wgpu::TexelCopyTextureInfo {
+            texture: &texture, mip_level: 0,
+            origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All,
+        },
+        &rgba_pixels,
+        wgpu::TexelCopyBufferLayout {
+            offset: 0,
+            bytes_per_row: Some(4 * width),
+            rows_per_image: Some(height),
+        },
+        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+    );
+
+    let view = texture.create_view(&Default::default());
+    let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+        mag_filter: wgpu::FilterMode::Linear,
+        min_filter: wgpu::FilterMode::Linear,
+        ..Default::default()
+    });
+
+    device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("GLB Albedo Texture BG"),
+        layout,
+        entries: &[
+            wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&view) },
+            wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(&sampler) },
+        ],
+    })
 }
 
 /// Cache of loaded meshes, keyed by file path.
@@ -79,8 +216,10 @@ impl MeshCache {
     pub fn get_or_load(
         &mut self,
         device: &wgpu::Device,
+        queue: &wgpu::Queue,
         project_root: &Path,
         mesh_path: &str,
+        texture_resources: Option<&TextureResources>,
     ) -> Result<MeshHandle, MeshError> {
         let key = PathBuf::from(mesh_path);
         if let Some(&handle) = self.path_to_handle.get(&key) {
@@ -104,7 +243,7 @@ impl MeshCache {
                 }
             }
         } else {
-            load_gltf(device, project_root, mesh_path)?
+            load_gltf(device, queue, project_root, mesh_path, texture_resources)?
         };
 
         let handle = MeshHandle(self.meshes.len());
@@ -134,8 +273,10 @@ impl MeshCache {
 /// applying each node's world transform to positions and normals.
 fn load_gltf(
     device: &wgpu::Device,
+    queue: &wgpu::Queue,
     project_root: &Path,
     mesh_path: &str,
+    texture_resources: Option<&TextureResources>,
 ) -> Result<GpuMesh, MeshError> {
     let full_path = project_root.join(mesh_path);
 
@@ -148,7 +289,7 @@ fn load_gltf(
         return Ok(create_procedural_cube(device));
     }
 
-    let (document, buffers, _images) = gltf::import(&full_path)?;
+    let (document, buffers, images) = gltf::import(&full_path)?;
 
     let mut all_vertices: Vec<Vertex3D> = Vec::new();
     let mut all_indices: Vec<u32> = Vec::new();
@@ -192,10 +333,36 @@ fn load_gltf(
         usage: wgpu::BufferUsages::INDEX,
     });
 
+    // Extract GLB texture: find the first base_color texture
+    let texture_bind_group = if let Some(tex_res) = texture_resources {
+        let mut texture_image_index: Option<usize> = None;
+        'outer: for mesh in document.meshes() {
+            for prim in mesh.primitives() {
+                if let Some(info) = prim.material().pbr_metallic_roughness().base_color_texture() {
+                    texture_image_index = Some(info.texture().source().index());
+                    break 'outer;
+                }
+            }
+        }
+        if let Some(idx) = texture_image_index {
+            if idx < images.len() {
+                tracing::info!("GLB '{}': loading albedo texture ({}x{})", mesh_path, images[idx].width, images[idx].height);
+                Some(create_texture_bind_group(device, queue, &images[idx], &tex_res.bind_group_layout))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     Ok(GpuMesh {
         vertex_buffer,
         index_buffer,
         index_count: all_indices.len() as u32,
+        texture_bind_group,
     })
 }
 
@@ -392,6 +559,7 @@ fn create_procedural_sphere(device: &wgpu::Device, radius: f32, rings: u32, sect
         vertex_buffer,
         index_buffer,
         index_count: indices.len() as u32,
+        texture_bind_group: None,
     }
 }
 
@@ -457,5 +625,6 @@ fn create_procedural_cube(device: &wgpu::Device) -> GpuMesh {
         vertex_buffer,
         index_buffer,
         index_count: indices.len() as u32,
+        texture_bind_group: None,
     }
 }

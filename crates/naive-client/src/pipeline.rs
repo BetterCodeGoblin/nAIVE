@@ -544,6 +544,7 @@ pub fn compile_pipeline(
     surface_format: wgpu::TextureFormat,
     viewport_width: u32,
     viewport_height: u32,
+    texture_bind_group_layout: Option<&wgpu::BindGroupLayout>,
 ) -> Result<CompiledPipeline, PipelineError> {
     // 1. Build DAG and get execution order
     let pass_order = build_dag(&pipeline_file.passes)?;
@@ -710,6 +711,7 @@ pub fn compile_pipeline(
                     &resources,
                     &camera_state.bind_group_layout,
                     &draw_pool.bind_group_layout,
+                    texture_bind_group_layout,
                 )
             }
             PassType::Fullscreen => {
@@ -963,15 +965,22 @@ fn create_rasterize_pipeline(
     resources: &HashMap<String, GpuResource>,
     camera_bind_group_layout: &wgpu::BindGroupLayout,
     draw_bind_group_layout: &wgpu::BindGroupLayout,
+    texture_bind_group_layout: Option<&wgpu::BindGroupLayout>,
 ) -> wgpu::RenderPipeline {
     let shader_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: Some("GBuffer Shader"),
         source: wgpu::ShaderSource::Wgsl(wgsl_source.into()),
     });
 
+    let layouts: Vec<&wgpu::BindGroupLayout> = if let Some(tex_layout) = texture_bind_group_layout {
+        vec![camera_bind_group_layout, draw_bind_group_layout, tex_layout]
+    } else {
+        vec![camera_bind_group_layout, draw_bind_group_layout]
+    };
+
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: Some("GBuffer Pipeline Layout"),
-        bind_group_layouts: &[camera_bind_group_layout, draw_bind_group_layout],
+        bind_group_layouts: &layouts,
         push_constant_ranges: &[],
     });
 
@@ -1926,6 +1935,7 @@ pub fn execute_pipeline(
     material_cache: &MaterialCache,
     splat_cache: &SplatCache,
     debug: &RenderDebugState,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) {
     let output = match gpu.surface.get_current_texture() {
         Ok(t) => t,
@@ -1946,6 +1956,7 @@ pub fn execute_pipeline(
     let encoder = execute_pipeline_to_view(
         gpu, compiled, scene_world, camera_state, draw_pool,
         mesh_cache, material_cache, splat_cache, &swapchain_view, debug,
+        texture_resources,
     );
 
     gpu.queue.submit(std::iter::once(encoder.finish()));
@@ -1964,6 +1975,7 @@ pub fn execute_pipeline_to_view(
     splat_cache: &SplatCache,
     swapchain_view: &wgpu::TextureView,
     debug: &RenderDebugState,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) -> wgpu::CommandEncoder {
 
     // DEBUG: dump camera VP matrix and first entities' transforms (frame 0 only)
@@ -2035,13 +2047,16 @@ pub fn execute_pipeline_to_view(
             .map(|c| [c[0], c[1], c[2], material.uniform.base_color[3]])
             .unwrap_or(material.uniform.base_color);
 
+        let gpu_mesh = mesh_cache.get(mesh_renderer.mesh_handle);
+        let has_texture = if gpu_mesh.texture_bind_group.is_some() { 1.0f32 } else { 0.0f32 };
         let draw_uniform = DrawUniforms {
             model_matrix: model_matrix.to_cols_array_2d(),
             normal_matrix: normal_matrix.to_cols_array_2d(),
             base_color,
             roughness,
             metallic,
-            _pad: [0.0; 2],
+            has_texture,
+            _pad: 0.0,
             emission,
             _padding: [0.0; 20],
         };
@@ -2169,6 +2184,7 @@ pub fn execute_pipeline_to_view(
                     camera_state,
                     draw_pool,
                     mesh_cache,
+                    texture_resources,
                 );
             }
             PassType::Fullscreen => {
@@ -2281,6 +2297,7 @@ fn execute_rasterize_pass(
     camera_state: &CameraState,
     draw_pool: &DrawUniformPool,
     mesh_cache: &MeshCache,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) {
     // Build color attachments from pass targets
     let color_views: Vec<&wgpu::TextureView> = pass
@@ -2346,6 +2363,14 @@ fn execute_rasterize_pass(
             let dynamic_offset = draw_index * DRAW_UNIFORM_SIZE as u32;
 
             render_pass.set_bind_group(1, &draw_pool.bind_group, &[dynamic_offset]);
+
+            // Bind texture at group(2): use mesh's texture or fallback to white
+            if let Some(tex_res) = texture_resources {
+                let tex_bg = gpu_mesh.texture_bind_group.as_ref()
+                    .unwrap_or(&tex_res.default_bind_group);
+                render_pass.set_bind_group(2, tex_bg, &[]);
+            }
+
             render_pass.set_vertex_buffer(0, gpu_mesh.vertex_buffer.slice(..));
             render_pass.set_index_buffer(
                 gpu_mesh.index_buffer.slice(..),

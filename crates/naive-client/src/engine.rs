@@ -101,6 +101,9 @@ pub struct Engine {
     pub editor_camera: Option<EditorCamera>,
     pub editor_command_log: Vec<(String, instant::Instant)>,
     pub editor_scene_path: Option<PathBuf>,
+
+    // Texture resources for GLB albedo textures
+    pub texture_resources: Option<crate::mesh::TextureResources>,
 }
 
 impl Engine {
@@ -149,6 +152,7 @@ impl Engine {
             editor_camera: None,
             editor_command_log: Vec::new(),
             editor_scene_path: None,
+            texture_resources: None,
         }
     }
 
@@ -190,6 +194,9 @@ impl Engine {
         let camera_state = CameraState::new(&gpu.device);
         let draw_pool = DrawUniformPool::new(&gpu.device);
 
+        // Initialize texture resources for GLB albedo textures
+        let tex_res = crate::mesh::TextureResources::new(&gpu.device, &gpu.queue);
+
         // Compile the forward shader (Phase 2 fallback pipeline)
         let forward_slang = self.project_root.join("shaders/passes/mesh_forward.slang");
         let forward_wgsl =
@@ -208,6 +215,7 @@ impl Engine {
             gpu.config.format,
             &camera_state.bind_group_layout,
             &draw_pool.bind_group_layout,
+            Some(&tex_res.bind_group_layout),
         );
 
         // Load the scene YAML
@@ -225,12 +233,16 @@ impl Engine {
             &mut scene_world,
             &scene,
             &gpu.device,
+            &gpu.queue,
             &self.project_root,
             &mut self.mesh_cache,
             &mut self.material_cache,
             &mut self.splat_cache,
             None,
+            Some(&tex_res),
         );
+
+        self.texture_resources = Some(tex_res);
 
         self.scene_world = Some(scene_world);
         self.camera_state = Some(camera_state);
@@ -562,6 +574,9 @@ impl Engine {
         let camera_state = CameraState::new(&gpu.device);
         let draw_pool = DrawUniformPool::new(&gpu.device);
 
+        // Initialize texture resources for GLB albedo textures
+        let tex_res = crate::mesh::TextureResources::new(&gpu.device, &gpu.queue);
+
         // Compile forward shader
         let forward_slang = self.project_root.join("shaders/passes/mesh_forward.slang");
         let forward_wgsl = match crate::shader::compile_mesh_forward_shader(Some(&forward_slang)) {
@@ -577,6 +592,7 @@ impl Engine {
             gpu.config.format,
             &camera_state.bind_group_layout,
             &draw_pool.bind_group_layout,
+            Some(&tex_res.bind_group_layout),
         );
 
         // Load existing scene or create a default editor scene
@@ -604,12 +620,16 @@ impl Engine {
             &mut scene_world,
             &scene,
             &gpu.device,
+            &gpu.queue,
             &self.project_root,
             &mut self.mesh_cache,
             &mut self.material_cache,
             &mut self.splat_cache,
             None,
+            Some(&tex_res),
         );
+
+        self.texture_resources = Some(tex_res);
 
         // Store the scene for physics init
         scene_world.current_scene = Some(scene.clone());
@@ -992,6 +1012,7 @@ impl Engine {
 
         match crate::pipeline::load_pipeline(&pipeline_path) {
             Ok(pipeline_file) => {
+                let tex_layout = self.texture_resources.as_ref().map(|tr| &tr.bind_group_layout);
                 match crate::pipeline::compile_pipeline(
                     &gpu.device,
                     &pipeline_file,
@@ -1001,6 +1022,7 @@ impl Engine {
                     gpu.config.format,
                     gpu.config.width,
                     gpu.config.height,
+                    tex_layout,
                 ) {
                     Ok(compiled) => {
                         self.compiled_pipeline = Some(compiled);
@@ -1069,12 +1091,14 @@ impl Engine {
             let camera_state = self.camera_state.as_ref().unwrap();
             let draw_pool = self.draw_pool.as_ref().unwrap();
 
+            let tex_layout = self.texture_resources.as_ref().map(|tr| &tr.bind_group_layout);
             let new_pipeline = crate::renderer::create_forward_pipeline(
                 &gpu.device,
                 &wgsl,
                 gpu.config.format,
                 &camera_state.bind_group_layout,
                 &draw_pool.bind_group_layout,
+                tex_layout,
             );
 
             let error = pollster::block_on(gpu.device.pop_error_scope());
@@ -1137,11 +1161,13 @@ impl Engine {
             scene_world,
             &new_scene,
             &gpu.device,
+            &gpu.queue,
             &self.project_root,
             &mut self.mesh_cache,
             &mut self.material_cache,
             &mut self.splat_cache,
             None,
+            self.texture_resources.as_ref(),
         );
 
         tracing::info!("Scene hot-reload complete");
@@ -1555,9 +1581,11 @@ impl Engine {
                     cmd.position,
                     cmd.scale,
                     &gpu.device,
+                    &gpu.queue,
                     &self.project_root,
                     &mut self.mesh_cache,
                     &mut self.material_cache,
+                    self.texture_resources.as_ref(),
                 );
             }
         }
@@ -1570,10 +1598,12 @@ impl Engine {
                     scene_world,
                     cmd,
                     &gpu.device,
+                    &gpu.queue,
                     &self.project_root,
                     &mut self.mesh_cache,
                     &mut self.material_cache,
                     physics_world,
+                    self.texture_resources.as_ref(),
                 );
             }
         }
@@ -1586,10 +1616,12 @@ impl Engine {
                     scene_world,
                     cmd,
                     &gpu.device,
+                    &gpu.queue,
                     &self.project_root,
                     &mut self.mesh_cache,
                     &mut self.material_cache,
                     physics_world,
+                    self.texture_resources.as_ref(),
                 );
             }
         }
@@ -1713,11 +1745,13 @@ impl Engine {
                 sw,
                 &scene,
                 &gpu.device,
+                &gpu.queue,
                 &self.project_root,
                 &mut self.mesh_cache,
                 &mut self.material_cache,
                 &mut self.splat_cache,
                 None,
+                self.texture_resources.as_ref(),
             );
         }
 
@@ -2147,9 +2181,11 @@ impl Engine {
                 position,
                 scale,
                 device,
+                &gpu.queue,
                 &self.project_root,
                 &mut self.mesh_cache,
                 &mut self.material_cache,
+                self.texture_resources.as_ref(),
             );
 
             if !ok {
@@ -2539,6 +2575,11 @@ impl Engine {
 
     /// Update the editor camera and apply to CameraState.
     fn update_editor_camera(&mut self) {
+        // Compute mouse delta from cursor position snapshot (event-order independent)
+        if let Some(input) = &mut self.input_state {
+            input.compute_cursor_delta();
+        }
+
         let input = match &self.input_state {
             Some(i) => i,
             None => return,
@@ -3020,6 +3061,7 @@ impl ApplicationHandler for Engine {
                                     &self.splat_cache,
                                     &swapchain_view,
                                     &self.render_debug,
+                                    self.texture_resources.as_ref(),
                                 );
                                 gpu.queue.submit(std::iter::once(encoder.finish()));
                             }
@@ -3049,6 +3091,7 @@ impl ApplicationHandler for Engine {
                                 forward_pipeline,
                                 &swapchain_view,
                                 &mut encoder,
+                                self.texture_resources.as_ref(),
                             );
                             gpu.queue.submit(std::iter::once(encoder.finish()));
                         }

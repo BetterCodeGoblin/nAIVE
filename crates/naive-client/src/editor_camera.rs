@@ -1,5 +1,4 @@
 use glam::{Mat4, Quat, Vec3};
-use winit::event::MouseButton;
 use winit::keyboard::KeyCode;
 
 use crate::camera::CameraState;
@@ -37,11 +36,11 @@ impl EditorCamera {
         Self::new(Vec3::new(0.0, 5.0, 10.0), 0.0, -0.3)
     }
 
-    /// Update camera from input. Mouse look requires right-click held.
+    /// Update camera from input. Mouse look is always active in editor mode.
     pub fn update(&mut self, input: &InputState, dt: f32) {
-        // Mouse look: only when right mouse button is held
-        if input.mouse_button_held(MouseButton::Right) {
-            let delta = input.mouse_delta();
+        // Mouse look: always active (no button needed — works on Mac trackpads)
+        let delta = input.mouse_delta();
+        if delta.x.abs() > 0.01 || delta.y.abs() > 0.01 {
             self.yaw -= delta.x * self.sensitivity;
             self.pitch = (self.pitch - delta.y * self.sensitivity)
                 .clamp(-std::f32::consts::FRAC_PI_2 + 0.01, std::f32::consts::FRAC_PI_2 - 0.01);

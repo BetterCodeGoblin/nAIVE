@@ -93,16 +93,18 @@ pub fn spawn_runtime_entity(
     position: [f32; 3],
     scale: [f32; 3],
     device: &wgpu::Device,
+    queue: &wgpu::Queue,
     project_root: &Path,
     mesh_cache: &mut MeshCache,
     material_cache: &mut MaterialCache,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) -> bool {
     if scene_world.entity_registry.contains_key(id) {
         tracing::warn!("spawn_runtime_entity: id '{}' already exists", id);
         return false;
     }
 
-    let mesh_handle = match mesh_cache.get_or_load(device, project_root, mesh) {
+    let mesh_handle = match mesh_cache.get_or_load(device, queue, project_root, mesh, texture_resources) {
         Ok(h) => h,
         Err(e) => {
             tracing::error!("spawn_runtime_entity: mesh '{}' failed: {}", mesh, e);
@@ -171,18 +173,20 @@ pub fn spawn_all_entities(
     scene_world: &mut SceneWorld,
     scene: &SceneFile,
     device: &wgpu::Device,
+    queue: &wgpu::Queue,
     project_root: &Path,
     mesh_cache: &mut MeshCache,
     material_cache: &mut MaterialCache,
     splat_cache: &mut SplatCache,
     physics_world: Option<&mut PhysicsWorld>,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) {
     let pw_ptr = physics_world.map(|pw| pw as *mut PhysicsWorld);
     for entity_def in &scene.entities {
         // SAFETY: we need to reborrow the physics world for each entity spawn since
         // Option<&mut T> is not Copy. The reference is valid for the entire loop.
         let pw_ref = pw_ptr.map(|ptr| unsafe { &mut *ptr });
-        spawn_entity(scene_world, entity_def, device, project_root, mesh_cache, material_cache, splat_cache, pw_ref);
+        spawn_entity(scene_world, entity_def, device, queue, project_root, mesh_cache, material_cache, splat_cache, pw_ref, texture_resources);
     }
     scene_world.current_scene = Some(scene.clone());
     tracing::info!(
@@ -198,11 +202,13 @@ fn spawn_entity(
     scene_world: &mut SceneWorld,
     entity_def: &EntityDef,
     device: &wgpu::Device,
+    queue: &wgpu::Queue,
     project_root: &Path,
     mesh_cache: &mut MeshCache,
     material_cache: &mut MaterialCache,
     splat_cache: &mut SplatCache,
     physics_world: Option<&mut PhysicsWorld>,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) {
     let entity_id = EntityId(entity_def.id.clone());
     let tags = Tags(entity_def.tags.clone());
@@ -239,7 +245,7 @@ fn spawn_entity(
     // Start with base components all entities have
     let entity = if let Some(mr) = &entity_def.components.mesh_renderer {
         // Load mesh and material
-        let mesh_handle = match mesh_cache.get_or_load(device, project_root, &mr.mesh) {
+        let mesh_handle = match mesh_cache.get_or_load(device, queue, project_root, &mr.mesh, texture_resources) {
             Ok(h) => h,
             Err(e) => {
                 tracing::error!("Failed to load mesh '{}' for entity '{}': {}", mr.mesh, entity_def.id, e);
@@ -514,17 +520,19 @@ pub fn spawn_projectile_entity(
     scene_world: &mut SceneWorld,
     cmd: &ProjectileSpawnCommand,
     device: &wgpu::Device,
+    queue: &wgpu::Queue,
     project_root: &Path,
     mesh_cache: &mut MeshCache,
     material_cache: &mut MaterialCache,
     physics_world: &mut PhysicsWorld,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) -> bool {
     if scene_world.entity_registry.contains_key(&cmd.id) {
         tracing::warn!("spawn_projectile_entity: id '{}' already exists", cmd.id);
         return false;
     }
 
-    let mesh_handle = match mesh_cache.get_or_load(device, project_root, &cmd.mesh) {
+    let mesh_handle = match mesh_cache.get_or_load(device, queue, project_root, &cmd.mesh, texture_resources) {
         Ok(h) => h,
         Err(e) => {
             tracing::error!("spawn_projectile_entity: mesh '{}' failed: {}", cmd.mesh, e);
@@ -611,17 +619,19 @@ pub fn spawn_dynamic_entity(
     scene_world: &mut SceneWorld,
     cmd: &DynamicSpawnCommand,
     device: &wgpu::Device,
+    queue: &wgpu::Queue,
     project_root: &Path,
     mesh_cache: &mut MeshCache,
     material_cache: &mut MaterialCache,
     physics_world: &mut PhysicsWorld,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) -> bool {
     if scene_world.entity_registry.contains_key(&cmd.id) {
         tracing::warn!("spawn_dynamic_entity: id '{}' already exists", cmd.id);
         return false;
     }
 
-    let mesh_handle = match mesh_cache.get_or_load(device, project_root, &cmd.mesh) {
+    let mesh_handle = match mesh_cache.get_or_load(device, queue, project_root, &cmd.mesh, texture_resources) {
         Ok(h) => h,
         Err(e) => {
             tracing::error!("spawn_dynamic_entity: mesh '{}' failed: {}", cmd.mesh, e);
@@ -925,16 +935,18 @@ pub fn reconcile_scene(
     scene_world: &mut SceneWorld,
     new_scene: &SceneFile,
     device: &wgpu::Device,
+    queue: &wgpu::Queue,
     project_root: &Path,
     mesh_cache: &mut MeshCache,
     material_cache: &mut MaterialCache,
     splat_cache: &mut SplatCache,
     physics_world: Option<&mut PhysicsWorld>,
+    texture_resources: Option<&crate::mesh::TextureResources>,
 ) {
     let old_scene = match &scene_world.current_scene {
         Some(s) => s.clone(),
         None => {
-            spawn_all_entities(scene_world, new_scene, device, project_root, mesh_cache, material_cache, splat_cache, physics_world);
+            spawn_all_entities(scene_world, new_scene, device, queue, project_root, mesh_cache, material_cache, splat_cache, physics_world, texture_resources);
             return;
         }
     };
@@ -953,7 +965,7 @@ pub fn reconcile_scene(
     // 2. Spawn new entities
     for entity_def in &new_scene.entities {
         if !old_ids.contains(entity_def.id.as_str()) {
-            spawn_entity(scene_world, entity_def, device, project_root, mesh_cache, material_cache, splat_cache, None);
+            spawn_entity(scene_world, entity_def, device, queue, project_root, mesh_cache, material_cache, splat_cache, None, texture_resources);
             tracing::info!("Hot-reload: spawned entity '{}'", entity_def.id);
         }
     }
