@@ -14,6 +14,7 @@ use crate::camera::CameraState;
 use crate::cli::CliArgs;
 use crate::command::CommandServer;
 use crate::components::{Camera, CameraMode, CameraRole, CollisionDamage, GaussianSplat, Health, Player, Projectile, Transform};
+use crate::editor_camera::EditorCamera;
 use crate::events::EventBus;
 use crate::font::BitmapFont;
 use crate::tween::TweenSystem;
@@ -95,6 +96,11 @@ pub struct Engine {
 
     // Camera shake state
     pub camera_shake: CameraShakeState,
+
+    // Editor mode
+    pub editor_camera: Option<EditorCamera>,
+    pub editor_command_log: Vec<(String, instant::Instant)>,
+    pub editor_scene_path: Option<PathBuf>,
 }
 
 impl Engine {
@@ -140,6 +146,9 @@ impl Engine {
                 ..Default::default()
             },
             camera_shake: CameraShakeState::new(),
+            editor_camera: None,
+            editor_command_log: Vec::new(),
+            editor_scene_path: None,
         }
     }
 
@@ -528,6 +537,331 @@ impl Engine {
             Err(e) => {
                 tracing::warn!("Failed to start command server: {}", e);
             }
+        }
+    }
+
+    /// Initialize editor mode: load or create scene, init free camera, start command socket.
+    fn init_editor_mode(&mut self) {
+        let gpu = match &self.gpu {
+            Some(gpu) => gpu,
+            None => return,
+        };
+
+        // Set window title
+        let title = if let Some(scene) = &self.args.scene {
+            format!("nAIVE Editor - {}", scene)
+        } else {
+            "nAIVE Editor".to_string()
+        };
+        gpu.window.set_title(&title);
+
+        // Generate default audio files
+        crate::audio_gen::generate_default_sounds(&self.project_root);
+
+        // Create camera state and draw uniform pool
+        let camera_state = CameraState::new(&gpu.device);
+        let draw_pool = DrawUniformPool::new(&gpu.device);
+
+        // Compile forward shader
+        let forward_slang = self.project_root.join("shaders/passes/mesh_forward.slang");
+        let forward_wgsl = match crate::shader::compile_mesh_forward_shader(Some(&forward_slang)) {
+            Ok(wgsl) => wgsl,
+            Err(e) => {
+                tracing::error!("Forward shader compilation failed: {}", e);
+                crate::shader::get_mesh_forward_wgsl()
+            }
+        };
+        let forward_pipeline = crate::renderer::create_forward_pipeline(
+            &gpu.device,
+            &forward_wgsl,
+            gpu.config.format,
+            &camera_state.bind_group_layout,
+            &draw_pool.bind_group_layout,
+        );
+
+        // Load existing scene or create a default editor scene
+        let (scene, scene_path) = if let Some(scene_arg) = &self.args.scene {
+            let path = self.project_root.join(scene_arg);
+            if path.exists() {
+                match crate::scene::load_scene(&path) {
+                    Ok(s) => (s, Some(path)),
+                    Err(e) => {
+                        tracing::error!("Failed to load scene: {}", e);
+                        (Self::default_editor_scene(), None)
+                    }
+                }
+            } else {
+                tracing::warn!("Scene file not found: {:?}, creating default", path);
+                (Self::default_editor_scene(), None)
+            }
+        } else {
+            (Self::default_editor_scene(), None)
+        };
+
+        // Spawn entities into ECS
+        let mut scene_world = SceneWorld::new();
+        crate::world::spawn_all_entities(
+            &mut scene_world,
+            &scene,
+            &gpu.device,
+            &self.project_root,
+            &mut self.mesh_cache,
+            &mut self.material_cache,
+            &mut self.splat_cache,
+            None,
+        );
+
+        // Store the scene for physics init
+        scene_world.current_scene = Some(scene.clone());
+        self.scene_world = Some(scene_world);
+        self.camera_state = Some(camera_state);
+        self.draw_pool = Some(draw_pool);
+        self.forward_pipeline = Some(forward_pipeline);
+        self.scene_path = scene_path.clone();
+        self.editor_scene_path = scene_path;
+
+        // Initialize physics world (same as normal game mode)
+        let gravity = glam::Vec3::from(scene.settings.gravity);
+        let mut physics_world = PhysicsWorld::new(gravity);
+        if let Some(sw) = &mut self.scene_world {
+            for entity_def in &scene.entities {
+                if let Some(&entity) = sw.entity_registry.get(&entity_def.id) {
+                    let pos = entity_def.components.transform.as_ref()
+                        .map(|t| glam::Vec3::from(t.position))
+                        .unwrap_or(glam::Vec3::ZERO);
+                    let rot = entity_def.components.transform.as_ref()
+                        .map(|t| crate::world::euler_degrees_to_quat(t.rotation))
+                        .unwrap_or(glam::Quat::IDENTITY);
+
+                    if let Some(col_def) = &entity_def.components.collider {
+                        let shape = crate::world::parse_collider_shape(col_def);
+                        let is_trigger = col_def.is_trigger;
+                        let restitution = col_def.restitution;
+                        let friction = col_def.friction;
+                        let body_type = entity_def.components.rigid_body.as_ref()
+                            .map(|rb| rb.body_type.as_str())
+                            .unwrap_or("static");
+
+                        match body_type {
+                            "dynamic" => {
+                                let mass = entity_def.components.rigid_body.as_ref()
+                                    .map(|rb| rb.mass).unwrap_or(1.0);
+                                let ccd = entity_def.components.rigid_body.as_ref()
+                                    .map(|rb| rb.ccd).unwrap_or(false);
+                                let (rb_handle, col_handle) = physics_world
+                                    .add_dynamic_body(entity, pos, rot, shape.clone(), mass, restitution, friction, ccd);
+                                let _ = sw.world.insert(entity, (
+                                    crate::physics::RigidBody { handle: rb_handle, body_type: crate::physics::PhysicsBodyType::Dynamic },
+                                    crate::physics::Collider { handle: col_handle, shape, is_trigger },
+                                ));
+                            }
+                            _ => {
+                                let (rb_handle, col_handle) = physics_world
+                                    .add_static_body(entity, pos, rot, shape.clone(), is_trigger, restitution, friction);
+                                let _ = sw.world.insert(entity, (
+                                    crate::physics::RigidBody { handle: rb_handle, body_type: crate::physics::PhysicsBodyType::Static },
+                                    crate::physics::Collider { handle: col_handle, shape, is_trigger },
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.physics_world = Some(physics_world);
+        tracing::info!("Physics world initialized");
+
+        // Initialize scripting runtime
+        let mut script_runtime = ScriptRuntime::new();
+        if let Err(e) = script_runtime.register_api() {
+            tracing::error!("Failed to register script API: {}", e);
+        }
+        self.script_runtime = Some(script_runtime);
+
+        // UI overlay
+        let font = crate::font::create_bitmap_font(&gpu.device, &gpu.queue);
+        let ui = UiRenderer::new(&gpu.device, gpu.config.format, &font);
+        self.bitmap_font = Some(font);
+        self.ui_renderer = Some(ui);
+
+        // Input system
+        let bindings = crate::input::load_bindings(&self.project_root);
+        self.input_state = Some(InputState::new(bindings));
+
+        self.last_frame_time = Some(instant::Instant::now());
+
+        // Initialize editor camera: try to extract position from scene's main camera
+        let cam_pos = self.scene_world.as_ref().and_then(|sw| {
+            for (_entity, (transform, camera)) in sw.world.query::<(&Transform, &Camera)>().iter() {
+                if camera.role == CameraRole::Main {
+                    return Some(transform.position);
+                }
+            }
+            None
+        }).unwrap_or(glam::Vec3::new(0.0, 5.0, 10.0));
+
+        self.editor_camera = Some(EditorCamera::new(cam_pos, 0.0, -0.3));
+
+        // Try to load render pipeline
+        self.try_load_pipeline();
+
+        // Start command socket
+        match CommandServer::start(&self.args.socket) {
+            Ok(server) => {
+                tracing::info!("Editor command socket: {}", server.socket_path);
+                self.command_server = Some(server);
+            }
+            Err(e) => {
+                tracing::warn!("Failed to start command server: {}", e);
+            }
+        }
+
+        tracing::info!("Editor mode initialized");
+    }
+
+    /// Create a default editor scene with ground plane, lights, marker cube, and camera.
+    fn default_editor_scene() -> crate::scene::SceneFile {
+        use crate::scene::*;
+        SceneFile {
+            name: "Editor Scene".to_string(),
+            settings: SceneSettings {
+                ambient_light: [0.15, 0.15, 0.2],
+                fog: None,
+                gravity: [0.0, -9.81, 0.0],
+            },
+            entities: vec![
+                // Ground plane (with static collider so things bounce off it)
+                EntityDef {
+                    id: "editor_ground".to_string(),
+                    tags: vec!["ground".to_string()],
+                    extends: None,
+                    components: ComponentMap {
+                        transform: Some(TransformDef {
+                            position: [0.0, -0.5, 0.0],
+                            rotation: [0.0, 0.0, 0.0],
+                            scale: [20.0, 1.0, 20.0],
+                        }),
+                        mesh_renderer: Some(MeshRendererDef {
+                            mesh: "procedural:cube".to_string(),
+                            material: "procedural:default".to_string(),
+                            cast_shadows: true,
+                            receive_shadows: true,
+                        }),
+                        collider: Some(ColliderDef {
+                            shape: "box".to_string(),
+                            half_extents: Some([10.0, 0.5, 10.0]),
+                            radius: None,
+                            half_height: None,
+                            is_trigger: false,
+                            restitution: 0.5,
+                            friction: 0.5,
+                        }),
+                        ..Default::default()
+                    },
+                },
+                // Origin marker cube (so you can always see something)
+                EntityDef {
+                    id: "editor_marker".to_string(),
+                    tags: vec!["marker".to_string()],
+                    extends: None,
+                    components: ComponentMap {
+                        transform: Some(TransformDef {
+                            position: [0.0, 0.5, 0.0],
+                            rotation: [0.0, 0.0, 0.0],
+                            scale: [1.0, 1.0, 1.0],
+                        }),
+                        mesh_renderer: Some(MeshRendererDef {
+                            mesh: "procedural:cube".to_string(),
+                            material: "procedural:default".to_string(),
+                            cast_shadows: true,
+                            receive_shadows: true,
+                        }),
+                        ..Default::default()
+                    },
+                },
+                // Directional light (sun)
+                EntityDef {
+                    id: "editor_sun".to_string(),
+                    tags: vec!["light".to_string()],
+                    extends: None,
+                    components: ComponentMap {
+                        transform: Some(TransformDef {
+                            position: [0.0, 10.0, 0.0],
+                            rotation: [0.0, 0.0, 0.0],
+                            scale: [1.0, 1.0, 1.0],
+                        }),
+                        directional_light: Some(DirectionalLightDef {
+                            direction: [0.3, -1.0, 0.5],
+                            color: [1.0, 0.95, 0.9],
+                            intensity: 3.0,
+                            shadow_extent: 30.0,
+                        }),
+                        ..Default::default()
+                    },
+                },
+                // Key light (point)
+                EntityDef {
+                    id: "editor_key_light".to_string(),
+                    tags: vec!["light".to_string()],
+                    extends: None,
+                    components: ComponentMap {
+                        transform: Some(TransformDef {
+                            position: [5.0, 8.0, 5.0],
+                            rotation: [0.0, 0.0, 0.0],
+                            scale: [1.0, 1.0, 1.0],
+                        }),
+                        point_light: Some(PointLightDef {
+                            color: [1.0, 0.9, 0.8],
+                            intensity: 50.0,
+                            range: 30.0,
+                        }),
+                        ..Default::default()
+                    },
+                },
+                // Fill light (point)
+                EntityDef {
+                    id: "editor_fill_light".to_string(),
+                    tags: vec!["light".to_string()],
+                    extends: None,
+                    components: ComponentMap {
+                        transform: Some(TransformDef {
+                            position: [-5.0, 6.0, -3.0],
+                            rotation: [0.0, 0.0, 0.0],
+                            scale: [1.0, 1.0, 1.0],
+                        }),
+                        point_light: Some(PointLightDef {
+                            color: [0.6, 0.7, 1.0],
+                            intensity: 30.0,
+                            range: 25.0,
+                        }),
+                        ..Default::default()
+                    },
+                },
+                // Camera
+                EntityDef {
+                    id: "editor_camera".to_string(),
+                    tags: vec![],
+                    extends: None,
+                    components: ComponentMap {
+                        transform: Some(TransformDef {
+                            position: [0.0, 3.0, 8.0],
+                            rotation: [0.0, 0.0, 0.0],
+                            scale: [1.0, 1.0, 1.0],
+                        }),
+                        camera: Some(CameraDef {
+                            fov: 75.0,
+                            near: 0.1,
+                            far: 500.0,
+                            role: "main".to_string(),
+                            mode: "first_person".to_string(),
+                            distance: 4.0,
+                            height_offset: 1.5,
+                            pitch_limits: None,
+                        }),
+                        ..Default::default()
+                    },
+                },
+            ],
         }
     }
 
@@ -1540,6 +1874,8 @@ impl Engine {
     }
 
     /// Process commands from the command socket.
+    /// Editor-enhanced commands (spawn with mesh, save_scene, etc.) are handled here
+    /// at Engine level where we have access to GPU resources and caches.
     fn process_commands(&mut self) {
         let commands = match &self.command_server {
             Some(s) => s.poll(),
@@ -1547,14 +1883,488 @@ impl Engine {
         };
 
         for pending in commands {
-            let response = crate::command::handle_command(
-                &pending.request,
-                &mut self.scene_world,
-                &mut self.event_bus,
-                &mut self.input_state,
-                &mut self.paused,
-            );
+            let cmd = pending.request.cmd.as_str();
+
+            // Log command for editor overlay (with detail)
+            if self.args.editor_mode {
+                let detail = match cmd {
+                    "spawn_entity" => {
+                        let eid = pending.request.params.get("entity_id")
+                            .and_then(|v| v.as_str()).unwrap_or("?");
+                        let mesh = pending.request.params.get("components")
+                            .and_then(|c| c.get("mesh_renderer"))
+                            .and_then(|m| m.get("mesh"))
+                            .and_then(|v| v.as_str()).unwrap_or("");
+                        if mesh.is_empty() {
+                            format!("spawn {}", eid)
+                        } else {
+                            format!("spawn {} [{}]", eid, mesh)
+                        }
+                    }
+                    "destroy_entity" => {
+                        let eid = pending.request.params.get("entity_id")
+                            .and_then(|v| v.as_str()).unwrap_or("?");
+                        format!("destroy {}", eid)
+                    }
+                    "modify_entity" => {
+                        let eid = pending.request.params.get("entity_id")
+                            .and_then(|v| v.as_str()).unwrap_or("?");
+                        format!("modify {}", eid)
+                    }
+                    "set_camera" => "set_camera".to_string(),
+                    "save_scene" => {
+                        let path = pending.request.params.get("path")
+                            .and_then(|v| v.as_str()).unwrap_or("scenes/editor_scene.yaml");
+                        format!("save -> {}", path)
+                    }
+                    other => other.to_string(),
+                };
+                self.editor_command_log.push((detail, instant::Instant::now()));
+                // Keep only last 10
+                if self.editor_command_log.len() > 10 {
+                    self.editor_command_log.remove(0);
+                }
+            }
+
+            let response = match cmd {
+                // Enhanced spawn_entity: if it has mesh_renderer, handle at Engine level
+                "spawn_entity" => {
+                    let has_mesh = pending.request.params.get("components")
+                        .and_then(|c| c.get("mesh_renderer"))
+                        .is_some();
+                    if has_mesh {
+                        self.handle_spawn_with_mesh(&pending.request)
+                    } else {
+                        crate::command::handle_command(
+                            &pending.request,
+                            &mut self.scene_world,
+                            &mut self.event_bus,
+                            &mut self.input_state,
+                            &mut self.paused,
+                        )
+                    }
+                }
+                "save_scene" => self.handle_save_scene(&pending.request),
+                "get_scene_yaml" => self.handle_get_scene_yaml(),
+                "set_camera" => self.handle_set_camera(&pending.request),
+                "editor_status" => self.handle_editor_status(),
+                _ => crate::command::handle_command(
+                    &pending.request,
+                    &mut self.scene_world,
+                    &mut self.event_bus,
+                    &mut self.input_state,
+                    &mut self.paused,
+                ),
+            };
             let _ = pending.responder.send(response);
+        }
+    }
+
+    /// Handle spawn_entity with mesh_renderer component (needs GPU resources).
+    fn handle_spawn_with_mesh(&mut self, req: &crate::command::CommandRequest) -> crate::command::CommandResponse {
+        use crate::command::{CommandResponse};
+        use serde_json::json;
+
+        let entity_id = match req.params.get("entity_id").and_then(|v| v.as_str()) {
+            Some(id) => id.to_string(),
+            None => return CommandResponse::error("Missing 'entity_id' parameter"),
+        };
+
+        let gpu = match &self.gpu {
+            Some(gpu) => gpu,
+            None => return CommandResponse::error("GPU not initialized"),
+        };
+        let device = &gpu.device;
+
+        let components = match req.params.get("components") {
+            Some(c) => c,
+            None => return CommandResponse::error("Missing 'components' parameter"),
+        };
+
+        let mr = match components.get("mesh_renderer") {
+            Some(mr) => mr,
+            None => return CommandResponse::error("Missing 'mesh_renderer' in components"),
+        };
+
+        let mesh = mr.get("mesh").and_then(|v| v.as_str()).unwrap_or("procedural:cube");
+        let material = mr.get("material").and_then(|v| v.as_str()).unwrap_or("procedural:default");
+
+        // Parse transform
+        let mut position = [0.0f32; 3];
+        let mut scale = [1.0f32; 3];
+        let mut rotation = [0.0f32; 3];
+        if let Some(t) = components.get("transform") {
+            if let Some(arr) = t.get("position").and_then(|v| v.as_array()) {
+                if arr.len() == 3 {
+                    position = [
+                        arr[0].as_f64().unwrap_or(0.0) as f32,
+                        arr[1].as_f64().unwrap_or(0.0) as f32,
+                        arr[2].as_f64().unwrap_or(0.0) as f32,
+                    ];
+                }
+            }
+            if let Some(arr) = t.get("scale").and_then(|v| v.as_array()) {
+                if arr.len() == 3 {
+                    scale = [
+                        arr[0].as_f64().unwrap_or(1.0) as f32,
+                        arr[1].as_f64().unwrap_or(1.0) as f32,
+                        arr[2].as_f64().unwrap_or(1.0) as f32,
+                    ];
+                }
+            }
+            if let Some(arr) = t.get("rotation").and_then(|v| v.as_array()) {
+                if arr.len() == 3 {
+                    rotation = [
+                        arr[0].as_f64().unwrap_or(0.0) as f32,
+                        arr[1].as_f64().unwrap_or(0.0) as f32,
+                        arr[2].as_f64().unwrap_or(0.0) as f32,
+                    ];
+                }
+            }
+        }
+
+        // Parse tags
+        let tags = req.params.get("tags")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect::<Vec<_>>())
+            .unwrap_or_default();
+
+        let scene_world = match &mut self.scene_world {
+            Some(sw) => sw,
+            None => return CommandResponse::error("No scene loaded"),
+        };
+
+        if scene_world.entity_registry.contains_key(&entity_id) {
+            return CommandResponse::error(format!("Entity '{}' already exists", entity_id));
+        }
+
+        // Use spawn_runtime_entity for mesh entities
+        let ok = crate::world::spawn_runtime_entity(
+            scene_world,
+            &entity_id,
+            mesh,
+            material,
+            position,
+            scale,
+            device,
+            &self.project_root,
+            &mut self.mesh_cache,
+            &mut self.material_cache,
+        );
+
+        if !ok {
+            return CommandResponse::error(format!("Failed to spawn entity '{}'", entity_id));
+        }
+
+        // Apply rotation if non-zero
+        if rotation != [0.0, 0.0, 0.0] {
+            if let Some(&entity) = scene_world.entity_registry.get(&entity_id) {
+                if let Ok(mut transform) = scene_world.world.get::<&mut Transform>(entity) {
+                    transform.rotation = crate::world::euler_degrees_to_quat(rotation);
+                    transform.dirty = true;
+                }
+            }
+        }
+
+        // Apply tags
+        if !tags.is_empty() {
+            if let Some(&entity) = scene_world.entity_registry.get(&entity_id) {
+                if let Ok(mut entity_tags) = scene_world.world.get::<&mut crate::components::Tags>(entity) {
+                    entity_tags.0 = tags;
+                }
+            }
+        }
+
+        CommandResponse::ok(json!({"entity_id": entity_id}))
+    }
+
+    /// Handle save_scene: serialize current ECS state to YAML file.
+    fn handle_save_scene(&self, req: &crate::command::CommandRequest) -> crate::command::CommandResponse {
+        use crate::command::CommandResponse;
+        use serde_json::json;
+
+        let path = req.params.get("path").and_then(|v| v.as_str())
+            .unwrap_or("scenes/editor_scene.yaml");
+        let full_path = self.project_root.join(path);
+
+        let yaml = match self.serialize_scene_to_yaml() {
+            Some(y) => y,
+            None => return CommandResponse::error("No scene to save"),
+        };
+
+        // Ensure parent directory exists
+        if let Some(parent) = full_path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+
+        match std::fs::write(&full_path, &yaml) {
+            Ok(()) => {
+                tracing::info!("Scene saved to {:?}", full_path);
+                CommandResponse::ok(json!({"path": full_path.display().to_string(), "bytes": yaml.len()}))
+            }
+            Err(e) => CommandResponse::error(format!("Failed to write scene: {}", e)),
+        }
+    }
+
+    /// Handle get_scene_yaml: return current scene as YAML string.
+    fn handle_get_scene_yaml(&self) -> crate::command::CommandResponse {
+        use crate::command::CommandResponse;
+        use serde_json::json;
+
+        match self.serialize_scene_to_yaml() {
+            Some(yaml) => CommandResponse::ok(json!({"yaml": yaml})),
+            None => CommandResponse::error("No scene loaded"),
+        }
+    }
+
+    /// Handle set_camera: update editor camera position/rotation.
+    fn handle_set_camera(&mut self, req: &crate::command::CommandRequest) -> crate::command::CommandResponse {
+        use crate::command::CommandResponse;
+        use serde_json::json;
+
+        let editor_cam = match &mut self.editor_camera {
+            Some(c) => c,
+            None => return CommandResponse::error("Not in editor mode"),
+        };
+
+        if let Some(arr) = req.params.get("position").and_then(|v| v.as_array()) {
+            if arr.len() == 3 {
+                editor_cam.position = glam::Vec3::new(
+                    arr[0].as_f64().unwrap_or(0.0) as f32,
+                    arr[1].as_f64().unwrap_or(0.0) as f32,
+                    arr[2].as_f64().unwrap_or(0.0) as f32,
+                );
+            }
+        }
+        if let Some(yaw) = req.params.get("yaw").and_then(|v| v.as_f64()) {
+            editor_cam.yaw = (yaw as f32).to_radians();
+        }
+        if let Some(pitch) = req.params.get("pitch").and_then(|v| v.as_f64()) {
+            editor_cam.pitch = (pitch as f32).to_radians();
+        }
+        if let Some(arr) = req.params.get("look_at").and_then(|v| v.as_array()) {
+            if arr.len() == 3 {
+                let target = glam::Vec3::new(
+                    arr[0].as_f64().unwrap_or(0.0) as f32,
+                    arr[1].as_f64().unwrap_or(0.0) as f32,
+                    arr[2].as_f64().unwrap_or(0.0) as f32,
+                );
+                let dir = (target - editor_cam.position).normalize_or_zero();
+                editor_cam.yaw = (-dir.x).atan2(-dir.z);
+                editor_cam.pitch = dir.y.asin();
+            }
+        }
+
+        CommandResponse::ok(json!({
+            "position": [editor_cam.position.x, editor_cam.position.y, editor_cam.position.z],
+            "yaw": editor_cam.yaw.to_degrees(),
+            "pitch": editor_cam.pitch.to_degrees(),
+        }))
+    }
+
+    /// Handle editor_status: return editor mode info.
+    fn handle_editor_status(&self) -> crate::command::CommandResponse {
+        use crate::command::CommandResponse;
+        use serde_json::json;
+
+        let entity_count = self.scene_world.as_ref()
+            .map(|sw| sw.entity_registry.len())
+            .unwrap_or(0);
+
+        let camera_info = self.editor_camera.as_ref().map(|c| {
+            json!({
+                "position": [c.position.x, c.position.y, c.position.z],
+                "yaw": c.yaw.to_degrees(),
+                "pitch": c.pitch.to_degrees(),
+                "speed": c.speed,
+            })
+        });
+
+        let scene_path = self.editor_scene_path.as_ref()
+            .map(|p| p.display().to_string());
+
+        CommandResponse::ok(json!({
+            "editor_mode": self.args.editor_mode,
+            "entity_count": entity_count,
+            "scene_path": scene_path,
+            "camera": camera_info,
+        }))
+    }
+
+    /// Serialize the current ECS scene state to YAML.
+    fn serialize_scene_to_yaml(&self) -> Option<String> {
+        use crate::components::*;
+        use crate::scene::*;
+
+        let scene_world = self.scene_world.as_ref()?;
+
+        let scene_name = scene_world.current_scene.as_ref()
+            .map(|s| s.name.clone())
+            .unwrap_or_else(|| "Editor Scene".to_string());
+
+        let settings = scene_world.current_scene.as_ref()
+            .map(|s| s.settings.clone())
+            .unwrap_or_default();
+
+        let mut entities = Vec::new();
+
+        for (id, &entity) in &scene_world.entity_registry {
+            let mut components = ComponentMap::default();
+
+            // Transform
+            if let Ok(t) = scene_world.world.get::<&Transform>(entity) {
+                let (yaw, pitch, roll) = t.rotation.to_euler(glam::EulerRot::YXZ);
+                components.transform = Some(TransformDef {
+                    position: t.position.to_array(),
+                    rotation: [pitch.to_degrees(), yaw.to_degrees(), roll.to_degrees()],
+                    scale: t.scale.to_array(),
+                });
+            }
+
+            // MeshRenderer
+            if let Ok(mr) = scene_world.world.get::<&MeshRenderer>(entity) {
+                let mesh_name = self.mesh_cache.name_for_handle(mr.mesh_handle)
+                    .unwrap_or_else(|| format!("mesh:{}", mr.mesh_handle.0));
+                let material_name = self.material_cache.name_for_handle(mr.material_handle)
+                    .unwrap_or_else(|| format!("material:{}", mr.material_handle.0));
+                components.mesh_renderer = Some(MeshRendererDef {
+                    mesh: mesh_name,
+                    material: material_name,
+                    cast_shadows: true,
+                    receive_shadows: true,
+                });
+            }
+
+            // Camera
+            if let Ok(c) = scene_world.world.get::<&Camera>(entity) {
+                let role_str = match &c.role {
+                    CameraRole::Main => "main".to_string(),
+                    CameraRole::Other(s) => s.clone(),
+                };
+                components.camera = Some(CameraDef {
+                    fov: c.fov_degrees,
+                    near: c.near,
+                    far: c.far,
+                    role: role_str,
+                    mode: "first_person".to_string(),
+                    distance: 4.0,
+                    height_offset: 1.5,
+                    pitch_limits: None,
+                });
+            }
+
+            // PointLight
+            if let Ok(pl) = scene_world.world.get::<&PointLight>(entity) {
+                components.point_light = Some(PointLightDef {
+                    color: pl.color.to_array(),
+                    intensity: pl.intensity,
+                    range: pl.range,
+                });
+            }
+
+            // DirectionalLight
+            if let Ok(dl) = scene_world.world.get::<&DirectionalLight>(entity) {
+                components.directional_light = Some(DirectionalLightDef {
+                    direction: dl.direction.to_array(),
+                    color: dl.color.to_array(),
+                    intensity: dl.intensity,
+                    shadow_extent: dl.shadow_extent,
+                });
+            }
+
+            // Tags
+            let tags = scene_world.world.get::<&Tags>(entity)
+                .map(|t| t.0.clone())
+                .unwrap_or_default();
+
+            entities.push(EntityDef {
+                id: id.clone(),
+                tags,
+                extends: None,
+                components,
+            });
+        }
+
+        let scene_file = SceneFile {
+            name: scene_name,
+            settings,
+            entities,
+        };
+
+        serde_yaml::to_string(&scene_file).ok()
+    }
+
+    /// Update the editor camera and apply to CameraState.
+    fn update_editor_camera(&mut self) {
+        let input = match &self.input_state {
+            Some(i) => i,
+            None => return,
+        };
+
+        if let Some(editor_cam) = &mut self.editor_camera {
+            editor_cam.update(input, self.delta_time);
+        }
+
+        let gpu = match &self.gpu {
+            Some(gpu) => gpu,
+            None => return,
+        };
+
+        if let (Some(editor_cam), Some(camera_state)) = (&self.editor_camera, &mut self.camera_state) {
+            editor_cam.apply_to_camera_state(camera_state, &gpu.queue, gpu.config.width, gpu.config.height);
+        }
+    }
+
+    /// Render a full editor frame: 3D scene + overlay.
+    /// Draw editor status overlay.
+    fn draw_editor_overlay(&mut self) {
+        let (Some(ui), Some(font), Some(gpu)) = (&mut self.ui_renderer, &self.bitmap_font, &self.gpu) else {
+            return;
+        };
+
+        let sz = 16.0;
+        let x = 10.0;
+        let green = [0.3, 1.0, 0.3, 1.0];
+        let white = [1.0, 1.0, 1.0, 0.9];
+        let dim = [0.7, 0.7, 0.7, 0.7];
+
+        // Background strip
+        ui.draw_rect(0.0, 0.0, gpu.config.width as f32, 30.0, [0.0, 0.0, 0.0, 0.6]);
+        ui.draw_text(x, 7.0, "EDITOR MODE", sz, green, font);
+
+        // Entity count
+        let entity_count = self.scene_world.as_ref()
+            .map(|sw| sw.entity_registry.len())
+            .unwrap_or(0);
+        ui.draw_text(180.0, 7.0, &format!("Entities: {}", entity_count), sz, white, font);
+
+        // Camera position
+        if let Some(cam) = &self.editor_camera {
+            let pos_text = format!("Cam: ({:.1}, {:.1}, {:.1})  Speed: {:.1}",
+                cam.position.x, cam.position.y, cam.position.z, cam.speed);
+            ui.draw_text(380.0, 7.0, &pos_text, sz, dim, font);
+        }
+
+        // Recent commands (bottom-left, with background panel)
+        let now = instant::Instant::now();
+        let h = gpu.config.height as f32;
+        let visible_cmds: Vec<_> = self.editor_command_log.iter().rev()
+            .filter(|(_, ts)| now.duration_since(*ts).as_secs_f32() < 10.0)
+            .take(8)
+            .collect();
+        if !visible_cmds.is_empty() {
+            let panel_h = visible_cmds.len() as f32 * 18.0 + 28.0;
+            let panel_y = h - panel_h - 4.0;
+            ui.draw_rect(4.0, panel_y, 450.0, panel_h, [0.0, 0.0, 0.0, 0.5]);
+            ui.draw_text(x, panel_y + 4.0, "Commands:", 14.0, dim, font);
+            let mut y = panel_y + 22.0;
+            for &(cmd_text, timestamp) in visible_cmds.iter().rev() {
+                let age = now.duration_since(*timestamp).as_secs_f32();
+                let alpha = if age > 7.0 { 1.0 - (age - 7.0) / 3.0 } else { 1.0 };
+                let color = [0.5, 0.9, 1.0, alpha.clamp(0.0, 1.0)];
+                ui.draw_text(x + 4.0, y, &format!("> {}", cmd_text), 14.0, color, font);
+                y += 18.0;
+            }
         }
     }
 }
@@ -1585,8 +2395,12 @@ impl ApplicationHandler for Engine {
         self.gpu = Some(gpu_state);
         tracing::info!("GPU initialized successfully");
 
-        // Phase 2: load scene if --scene was provided
-        self.load_scene();
+        if self.args.editor_mode {
+            self.init_editor_mode();
+        } else {
+            // Phase 2: load scene if --scene was provided
+            self.load_scene();
+        }
 
         // Start watchers (unified for shaders, scenes, materials, pipelines)
         self.start_watcher();
@@ -1649,38 +2463,45 @@ impl ApplicationHandler for Engine {
                 // Phase 8: Process command socket before input
                 self.process_commands();
 
-                // Handle Escape to toggle cursor capture
-                if let Some(input) = &self.input_state {
-                    if input.key_held(KeyCode::Escape) {
-                        if let Some(gpu) = &self.gpu {
-                            let _ = gpu.window.set_cursor_grab(winit::window::CursorGrabMode::None);
-                            gpu.window.set_cursor_visible(true);
-                        }
-                        if let Some(input) = &mut self.input_state {
-                            input.cursor_captured = false;
-                        }
-                    }
+                // ── Editor mode: update free camera (runs full loop below) ─
+                if self.args.editor_mode {
+                    self.update_editor_camera();
                 }
 
-                // Handle mouse click or any movement key to capture cursor
-                if let Some(input) = &self.input_state {
-                    if !input.cursor_captured {
-                        let should_capture = input.just_pressed("attack")
-                            || input.just_pressed("move_forward")
-                            || input.just_pressed("move_backward")
-                            || input.just_pressed("move_left")
-                            || input.just_pressed("move_right")
-                            || input.just_pressed("jump")
-                            || input.just_pressed("interact");
-                        if should_capture {
-                            tracing::info!("Capturing cursor for FPS mode");
+                // Handle Escape to toggle cursor capture (skip in editor mode)
+                if !self.args.editor_mode {
+                    if let Some(input) = &self.input_state {
+                        if input.key_held(KeyCode::Escape) {
                             if let Some(gpu) = &self.gpu {
-                                let _ = gpu.window.set_cursor_grab(winit::window::CursorGrabMode::Locked)
-                                    .or_else(|_| gpu.window.set_cursor_grab(winit::window::CursorGrabMode::Confined));
-                                gpu.window.set_cursor_visible(false);
+                                let _ = gpu.window.set_cursor_grab(winit::window::CursorGrabMode::None);
+                                gpu.window.set_cursor_visible(true);
                             }
                             if let Some(input) = &mut self.input_state {
-                                input.cursor_captured = true;
+                                input.cursor_captured = false;
+                            }
+                        }
+                    }
+
+                    // Handle mouse click or any movement key to capture cursor
+                    if let Some(input) = &self.input_state {
+                        if !input.cursor_captured {
+                            let should_capture = input.just_pressed("attack")
+                                || input.just_pressed("move_forward")
+                                || input.just_pressed("move_backward")
+                                || input.just_pressed("move_left")
+                                || input.just_pressed("move_right")
+                                || input.just_pressed("jump")
+                                || input.just_pressed("interact");
+                            if should_capture {
+                                tracing::info!("Capturing cursor for FPS mode");
+                                if let Some(gpu) = &self.gpu {
+                                    let _ = gpu.window.set_cursor_grab(winit::window::CursorGrabMode::Locked)
+                                        .or_else(|_| gpu.window.set_cursor_grab(winit::window::CursorGrabMode::Confined));
+                                    gpu.window.set_cursor_visible(false);
+                                }
+                                if let Some(input) = &mut self.input_state {
+                                    input.cursor_captured = true;
+                                }
                             }
                         }
                     }
@@ -1736,9 +2557,11 @@ impl ApplicationHandler for Engine {
 
                 if self.scene_world.is_some() {
                     if !self.paused {
-                        // Phase 5: FPS controller update (player input only when cursor captured)
-                        if self.input_state.as_ref().map(|i| i.cursor_captured).unwrap_or(false) {
-                            self.update_fps_controller();
+                        // Phase 5: FPS controller update (skip in editor mode — uses free camera)
+                        if !self.args.editor_mode {
+                            if self.input_state.as_ref().map(|i| i.cursor_captured).unwrap_or(false) {
+                                self.update_fps_controller();
+                            }
                         }
 
                         // Always step physics (gravity, collisions, etc.)
@@ -1860,7 +2683,10 @@ impl ApplicationHandler for Engine {
                     crate::transform::update_transforms(
                         &mut self.scene_world.as_mut().unwrap().world,
                     );
-                    self.update_camera();
+                    // Editor mode: camera already updated above via update_editor_camera()
+                    if !self.args.editor_mode {
+                        self.update_camera();
+                    }
 
                     // Tier 2: Grow GPU draw buffer if needed
                     if let (Some(gpu), Some(scene_world), Some(draw_pool)) =
@@ -1890,6 +2716,11 @@ impl ApplicationHandler for Engine {
                                 &gpu.queue,
                             );
                         }
+                    }
+
+                    // Queue editor overlay draw commands (before gpu borrow)
+                    if self.args.editor_mode {
+                        self.draw_editor_overlay();
                     }
 
                     // Acquire swapchain and render 3D scene + UI overlay

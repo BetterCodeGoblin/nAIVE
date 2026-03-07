@@ -186,6 +186,38 @@ fn main() {
             return;
         }
 
+        // naive edit [--scene X]
+        Some(naive_client::cli::Command::Edit { scene }) => {
+            let cwd = std::env::current_dir().expect("Failed to get current directory");
+            let mut args = match naive_client::project_config::find_config(&cwd) {
+                Some(config_path) => {
+                    let project_root = config_path.parent().unwrap();
+                    let config = match naive_client::project_config::load_config(&config_path) {
+                        Ok(c) => c,
+                        Err(e) => {
+                            eprintln!("Error: {}", e);
+                            std::process::exit(1);
+                        }
+                    };
+                    tracing::info!("Loaded project: {} v{}", config.name, config.version);
+                    let mut cli_args = naive_client::project_config::to_cli_args(&config, project_root);
+                    // In edit mode, only use --scene flag, not project default_scene.
+                    // A blank canvas is the default when no --scene is given.
+                    cli_args.scene = scene.clone();
+                    cli_args
+                }
+                None => {
+                    eprintln!("Error: No naive.yaml found in current directory or parents.");
+                    eprintln!("  Run `naive init <name>` to create a new project.");
+                    std::process::exit(1);
+                }
+            };
+            args.editor_mode = true;
+            args.hud = false; // Editor has its own overlay
+            run_engine(args);
+            return;
+        }
+
         // naive demo [selector] / naive demos [selector]
         Some(naive_client::cli::Command::Demo { selector })
         | Some(naive_client::cli::Command::Demos { selector }) => {

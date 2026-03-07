@@ -104,6 +104,7 @@ pub fn to_cli_args(config: &NaiveConfig, project_root: &Path) -> CliArgs {
         project: project_root.to_string_lossy().to_string(),
         socket: "/tmp/naive-runtime.sock".to_string(),
         hud: false,
+        editor_mode: false,
     }
 }
 

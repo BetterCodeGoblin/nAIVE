@@ -6,3 +6,11 @@
 *.log
 .env
 .mcp.json
+
+# Generated binary assets (large files)
+project/assets/meshes/*.glb
+project/assets/meshes/*.png
+assets/audio/
+
+# Keep meshy_car.glb (embedded in demo binary, ~1MB)
+!project/assets/meshes/meshy_car.glb

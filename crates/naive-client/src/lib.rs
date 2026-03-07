@@ -13,6 +13,7 @@ pub mod cli;
 pub mod command;
 pub mod demos;
 pub mod dev_log;
+pub mod editor_camera;
 pub mod engine;
 pub mod font;
 pub mod init;

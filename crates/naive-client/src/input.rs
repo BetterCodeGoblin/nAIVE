@@ -386,6 +386,11 @@ impl InputState {
         self.cursor_position
     }
 
+    /// Check if a raw mouse button is held.
+    pub fn mouse_button_held(&self, button: MouseButton) -> bool {
+        self.mouse_buttons_held.contains(&button)
+    }
+
     /// Check if a raw key is held.
     pub fn key_held(&self, code: KeyCode) -> bool {
         self.keys_held.contains(&code)

@@ -96,6 +96,8 @@ struct DemoEntry {
     scene_filename: &'static str,
     scene_content: &'static str,
     scripts: &'static [(&'static str, &'static str)],
+    /// Binary assets (GLB meshes, etc.) to extract into assets/meshes/
+    mesh_assets: &'static [(&'static str, &'static [u8])],
 }
 
 static DEMOS: &[DemoEntry] = &[
@@ -111,6 +113,7 @@ static DEMOS: &[DemoEntry] = &[
         scripts: &[
             ("tier25_impulse_demo.lua", include_str!("../../../project/logic/tier25_impulse_demo.lua")),
         ],
+        mesh_assets: &[],
     },
     DemoEntry {
         number: 2,
@@ -123,6 +126,7 @@ static DEMOS: &[DemoEntry] = &[
         scripts: &[
             ("tier25_ccd_demo.lua", include_str!("../../../project/logic/tier25_ccd_demo.lua")),
         ],
+        mesh_assets: &[],
     },
     DemoEntry {
         number: 3,
@@ -135,6 +139,7 @@ static DEMOS: &[DemoEntry] = &[
         scripts: &[
             ("tier25_materials_demo.lua", include_str!("../../../project/logic/tier25_materials_demo.lua")),
         ],
+        mesh_assets: &[],
     },
     // -- Combat --
     DemoEntry {
@@ -149,6 +154,7 @@ static DEMOS: &[DemoEntry] = &[
             ("combat_demo.lua", include_str!("../../../project/logic/combat_demo.lua")),
             ("combat_enemy.lua", include_str!("../../../project/logic/combat_enemy.lua")),
         ],
+        mesh_assets: &[],
     },
     DemoEntry {
         number: 5,
@@ -162,6 +168,7 @@ static DEMOS: &[DemoEntry] = &[
             ("third_person_demo.lua", include_str!("../../../project/logic/third_person_demo.lua")),
             ("combat_enemy.lua", include_str!("../../../project/logic/combat_enemy.lua")),
         ],
+        mesh_assets: &[],
     },
     // -- Visual --
     DemoEntry {
@@ -175,6 +182,7 @@ static DEMOS: &[DemoEntry] = &[
         scripts: &[
             ("tier2_particle_camera.lua", include_str!("../../../project/logic/tier2_particle_camera.lua")),
         ],
+        mesh_assets: &[],
     },
     DemoEntry {
         number: 7,
@@ -187,6 +195,7 @@ static DEMOS: &[DemoEntry] = &[
         scripts: &[
             ("ball_collision.lua", include_str!("../../../project/logic/ball_collision.lua")),
         ],
+        mesh_assets: &[],
     },
     DemoEntry {
         number: 8,
@@ -199,6 +208,7 @@ static DEMOS: &[DemoEntry] = &[
         scripts: &[
             ("tier25_shake_demo.lua", include_str!("../../../project/logic/tier25_shake_demo.lua")),
         ],
+        mesh_assets: &[],
     },
     // -- UI --
     DemoEntry {
@@ -213,6 +223,7 @@ static DEMOS: &[DemoEntry] = &[
             ("ui_demo.lua", include_str!("../../../project/logic/ui_demo.lua")),
             ("ui_demo_camera.lua", include_str!("../../../project/logic/ui_demo_camera.lua")),
         ],
+        mesh_assets: &[],
     },
     // -- Worlds --
     DemoEntry {
@@ -233,6 +244,7 @@ static DEMOS: &[DemoEntry] = &[
             ("neon_pulse.lua", include_str!("../../../project/logic/neon_pulse.lua")),
             ("genesis_sunrise.lua", include_str!("../../../project/logic/genesis_sunrise.lua")),
         ],
+        mesh_assets: &[],
     },
     DemoEntry {
         number: 11,
@@ -250,6 +262,7 @@ static DEMOS: &[DemoEntry] = &[
             ("torch_flicker.lua", include_str!("../../../project/logic/torch_flicker.lua")),
             ("neon_pulse.lua", include_str!("../../../project/logic/neon_pulse.lua")),
         ],
+        mesh_assets: &[],
     },
     DemoEntry {
         number: 12,
@@ -268,6 +281,7 @@ static DEMOS: &[DemoEntry] = &[
             ("genesis_orbit.lua", include_str!("../../../project/logic/genesis_orbit.lua")),
             ("neon_pulse.lua", include_str!("../../../project/logic/neon_pulse.lua")),
         ],
+        mesh_assets: &[],
     },
     // -- Stress Test --
     DemoEntry {
@@ -282,6 +296,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier2_stress_camera.lua", include_str!("../../../project/logic/tier2_stress_camera.lua")),
             ("tier2_stress_spawner.lua", include_str!("../../../project/logic/tier2_stress_spawner.lua")),
         ],
+        mesh_assets: &[],
     },
     DemoEntry {
         number: 14,
@@ -295,6 +310,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier2_lifecycle_player.lua", include_str!("../../../project/logic/tier2_lifecycle_player.lua")),
             ("tier2_pickup_bob.lua", include_str!("../../../project/logic/tier2_pickup_bob.lua")),
         ],
+        mesh_assets: &[],
     },
     // -- Visual (Gaussian Splatting) --
     DemoEntry {
@@ -308,6 +324,23 @@ static DEMOS: &[DemoEntry] = &[
         scripts: &[
             ("cosmic_camera.lua", include_str!("../../../project/logic/cosmic_camera.lua")),
             ("float_bob.lua", include_str!("../../../project/logic/float_bob.lua")),
+        ],
+        mesh_assets: &[],
+    },
+    // -- AI --
+    DemoEntry {
+        number: 16,
+        slug: "meshy",
+        name: "Meshy AI Asset",
+        description: "AI-generated 3D model on turntable",
+        category: "AI",
+        scene_filename: "meshy_ai_demo.yaml",
+        scene_content: include_str!("../../../project/scenes/meshy_ai_demo.yaml"),
+        scripts: &[
+            ("ai_asset_turntable.lua", include_str!("../../../project/logic/ai_asset_turntable.lua")),
+        ],
+        mesh_assets: &[
+            ("meshy_car.glb", include_bytes!("../../../project/assets/meshes/meshy_car.glb")),
         ],
     },
 ];
@@ -469,6 +502,11 @@ fn extract_demo(demo: &DemoEntry) -> PathBuf {
         write_file(&temp_root.join(format!("logic/{}", filename)), content);
     }
 
+    // Binary mesh assets (GLB files, etc.)
+    for (filename, data) in demo.mesh_assets {
+        write_binary(&temp_root.join(format!("assets/meshes/{}", filename)), data);
+    }
+
     temp_root
 }
 
@@ -478,6 +516,7 @@ fn create_dirs(root: &Path) {
         "scenes",
         "logic",
         "assets/materials",
+        "assets/meshes",
         "pipelines",
         "input",
     ];
@@ -488,6 +527,12 @@ fn create_dirs(root: &Path) {
 
 fn write_file(path: &Path, content: &str) {
     if let Err(e) = std::fs::write(path, content) {
+        tracing::warn!("Failed to write {}: {}", path.display(), e);
+    }
+}
+
+fn write_binary(path: &Path, data: &[u8]) {
+    if let Err(e) = std::fs::write(path, data) {
         tracing::warn!("Failed to write {}: {}", path.display(), e);
     }
 }

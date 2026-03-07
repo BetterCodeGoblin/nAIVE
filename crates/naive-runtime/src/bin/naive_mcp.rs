@@ -129,6 +129,21 @@ fn handle_tools_call(id: Option<Value>, request: &Value, socket_path: &str) -> V
             copy_field(args, &mut c, "action");
             c
         }
+        "naive_save_scene" => {
+            let mut c = json!({"cmd": "save_scene"});
+            copy_field(args, &mut c, "path");
+            c
+        }
+        "naive_get_scene_yaml" => json!({"cmd": "get_scene_yaml"}),
+        "naive_set_camera" => {
+            let mut c = json!({"cmd": "set_camera"});
+            copy_field(args, &mut c, "position");
+            copy_field(args, &mut c, "yaw");
+            copy_field(args, &mut c, "pitch");
+            copy_field(args, &mut c, "look_at");
+            c
+        }
+        "naive_editor_status" => json!({"cmd": "editor_status"}),
         _ => return json_rpc_error(id, -32602, &format!("Unknown tool: {}", tool_name)),
     };
 
@@ -221,12 +236,12 @@ fn tool_definitions() -> Vec<Value> {
         }),
         json!({
             "name": "naive_spawn_entity",
-            "description": "Spawn a new entity with given components",
+            "description": "Spawn a new entity with given components. Supports mesh_renderer for 3D objects (meshes: 'procedural:cube', 'procedural:sphere', or path like 'assets/meshes/model.glb'; materials: 'procedural:default' or path like 'assets/materials/red.yaml'). Also supports transform, point_light, directional_light, and camera components.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "entity_id": {"type": "string", "description": "Unique ID for the new entity"},
-                    "components": {"type": "object", "description": "Components (transform, point_light, camera)"},
+                    "components": {"type": "object", "description": "Components: transform {position, rotation, scale}, mesh_renderer {mesh, material}, point_light {color, intensity, range}, camera {fov, near, far, role}"},
                     "tags": {"type": "array", "items": {"type": "string"}, "description": "Tags for the entity"}
                 },
                 "required": ["entity_id"]
@@ -291,6 +306,49 @@ fn tool_definitions() -> Vec<Value> {
                     "action": {"type": "string", "description": "pause, resume, or status"}
                 },
                 "required": ["action"]
+            }
+        }),
+        json!({
+            "name": "naive_save_scene",
+            "description": "Save the current scene state to a YAML file. Serializes all entities with their transforms, meshes, lights, and cameras.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Output path relative to project root (default: 'scenes/editor_scene.yaml')"}
+                },
+                "required": []
+            }
+        }),
+        json!({
+            "name": "naive_get_scene_yaml",
+            "description": "Get the current scene state as a YAML string. Use this to understand what entities exist and their properties before making changes.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }),
+        json!({
+            "name": "naive_set_camera",
+            "description": "Set the editor camera position and orientation. Use look_at to point the camera at a specific world position.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "position": {"type": "array", "items": {"type": "number"}, "description": "Camera position [x, y, z]"},
+                    "yaw": {"type": "number", "description": "Camera yaw in degrees"},
+                    "pitch": {"type": "number", "description": "Camera pitch in degrees"},
+                    "look_at": {"type": "array", "items": {"type": "number"}, "description": "Point camera at this world position [x, y, z]"}
+                },
+                "required": []
+            }
+        }),
+        json!({
+            "name": "naive_editor_status",
+            "description": "Get editor status: mode, entity count, camera position, scene path.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {},
+                "required": []
             }
         }),
     ]
