@@ -682,7 +682,7 @@ impl Engine {
         self.input_state = Some(InputState::new(bindings));
 
         // Initialize scripting runtime with full API suite (same as load_scene)
-        let mut script_runtime = ScriptRuntime::new();
+        let script_runtime = ScriptRuntime::new();
         if let Err(e) = script_runtime.register_api() {
             tracing::error!("Failed to register script API: {}", e);
         }
@@ -2407,7 +2407,7 @@ impl Engine {
                 mlua::Value::Boolean(b) => b.to_string(),
                 mlua::Value::Integer(i) => i.to_string(),
                 mlua::Value::Number(n) => n.to_string(),
-                mlua::Value::String(s) => s.to_str().unwrap_or("").to_string(),
+                mlua::Value::String(s) => s.to_string_lossy(),
                 other => format!("{:?}", other),
             };
 
@@ -2423,8 +2423,8 @@ impl Engine {
             Ok(val) => {
                 // Parse back the JSON we stuffed in
                 if let mlua::Value::String(s) = val {
-                    let s = s.to_str().unwrap_or("{}");
-                    let parsed: serde_json::Value = serde_json::from_str(s).unwrap_or(json!({"result": s}));
+                    let s = s.to_string_lossy();
+                    let parsed: serde_json::Value = serde_json::from_str(&s).unwrap_or(json!({"result": s}));
                     CommandResponse::ok(parsed)
                 } else {
                     CommandResponse::ok(json!({"result": "ok"}))
