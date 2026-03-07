@@ -144,6 +144,11 @@ fn handle_tools_call(id: Option<Value>, request: &Value, socket_path: &str) -> V
             c
         }
         "naive_editor_status" => json!({"cmd": "editor_status"}),
+        "naive_run_lua" => {
+            let mut c = json!({"cmd": "run_lua"});
+            copy_field(args, &mut c, "code");
+            c
+        }
         _ => return json_rpc_error(id, -32602, &format!("Unknown tool: {}", tool_name)),
     };
 
@@ -236,12 +241,12 @@ fn tool_definitions() -> Vec<Value> {
         }),
         json!({
             "name": "naive_spawn_entity",
-            "description": "Spawn a new entity with given components. Supports mesh_renderer for 3D objects (meshes: 'procedural:cube', 'procedural:sphere', or path like 'assets/meshes/model.glb'; materials: 'procedural:default' or path like 'assets/materials/red.yaml'). Also supports transform, point_light, directional_light, and camera components.",
+            "description": "Spawn a new entity with given components. Supports mesh_renderer for 3D objects (meshes: 'procedural:cube', 'procedural:sphere', or path like 'assets/meshes/model.glb'; materials: 'procedural:default' or path like 'assets/materials/red.yaml'). Supports physics via rigid_body and collider components — spawned objects will fall, bounce, and collide. Also supports transform, point_light, directional_light, and camera components.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "entity_id": {"type": "string", "description": "Unique ID for the new entity"},
-                    "components": {"type": "object", "description": "Components: transform {position, rotation, scale}, mesh_renderer {mesh, material}, point_light {color, intensity, range}, camera {fov, near, far, role}"},
+                    "components": {"type": "object", "description": "Components: transform {position, rotation, scale}, mesh_renderer {mesh, material}, rigid_body {type: 'dynamic'|'static', mass, ccd}, collider {shape: 'box'|'sphere'|'capsule', radius, half_extents: [x,y,z], half_height, restitution, friction, is_trigger}, point_light {color, intensity, range}, camera {fov, near, far, role}"},
                     "tags": {"type": "array", "items": {"type": "string"}, "description": "Tags for the entity"}
                 },
                 "required": ["entity_id"]
@@ -349,6 +354,17 @@ fn tool_definitions() -> Vec<Value> {
                 "type": "object",
                 "properties": {},
                 "required": []
+            }
+        }),
+        json!({
+            "name": "naive_run_lua",
+            "description": "Execute Lua code in the running engine with full API access. Available APIs: entity.spawn_dynamic(), entity.get_position(), entity.set_position(), physics.apply_impulse(), physics.set_velocity(), physics.set_gravity(), particles.spawn_burst(), camera.shake(), scene.find_by_tag(), events.emit(), audio.play(). Use for batch operations, physics manipulation, particle effects, and anything not covered by other tools.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "code": {"type": "string", "description": "Lua code to execute. Has access to all engine APIs (entity, physics, particles, camera, scene, events, audio). Return values and print() output are captured and returned."}
+                },
+                "required": ["code"]
             }
         }),
     ]

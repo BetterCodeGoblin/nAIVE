@@ -112,11 +112,12 @@ When the editor is running, Claude Code can use these MCP tools via `naive_mcp`:
 
 | Tool | Description |
 |------|-------------|
-| `naive_spawn_entity` | Spawn entity with mesh, lights, camera. Use `mesh_renderer` component with `procedural:cube`, `procedural:sphere`, or GLB paths |
+| `naive_spawn_entity` | Spawn entity with mesh, lights, camera, and physics. Use `mesh_renderer` component with `procedural:cube`, `procedural:sphere`, or GLB paths. Add `rigid_body` + `collider` components for physics (dynamic bodies fall and collide). |
 | `naive_destroy_entity` | Remove an entity by ID |
 | `naive_modify_entity` | Modify transform, light properties on existing entities |
 | `naive_list_entities` | List all entities with IDs and tags |
 | `naive_query_entity` | Get detailed component data for an entity |
+| `naive_run_lua` | Execute Lua code with full API access (entity, physics, particles, camera, events, audio). Use for batch operations, physics manipulation, particle effects. |
 | `naive_save_scene` | Serialize current scene to YAML file |
 | `naive_get_scene_yaml` | Get current scene as YAML string (for understanding context) |
 | `naive_set_camera` | Move/orient the editor camera (position, yaw, pitch, look_at) |

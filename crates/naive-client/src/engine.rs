@@ -671,22 +671,113 @@ impl Engine {
         self.physics_world = Some(physics_world);
         tracing::info!("Physics world initialized");
 
-        // Initialize scripting runtime
-        let mut script_runtime = ScriptRuntime::new();
-        if let Err(e) = script_runtime.register_api() {
-            tracing::error!("Failed to register script API: {}", e);
-        }
-        self.script_runtime = Some(script_runtime);
-
-        // UI overlay
+        // UI overlay (must be initialized before Lua API registration)
         let font = crate::font::create_bitmap_font(&gpu.device, &gpu.queue);
         let ui = UiRenderer::new(&gpu.device, gpu.config.format, &font);
         self.bitmap_font = Some(font);
         self.ui_renderer = Some(ui);
 
-        // Input system
+        // Input system (must be initialized before Lua API registration)
         let bindings = crate::input::load_bindings(&self.project_root);
         self.input_state = Some(InputState::new(bindings));
+
+        // Initialize scripting runtime with full API suite (same as load_scene)
+        let mut script_runtime = ScriptRuntime::new();
+        if let Err(e) = script_runtime.register_api() {
+            tracing::error!("Failed to register script API: {}", e);
+        }
+
+        // Register input API
+        if let Some(input) = &self.input_state {
+            let input_ptr = input as *const InputState;
+            if let Err(e) = script_runtime.register_input_api(input_ptr) {
+                tracing::error!("Failed to register input API: {}", e);
+            }
+        }
+
+        // Register physics API
+        if let (Some(pw), Some(sw)) = (&mut self.physics_world, &self.scene_world) {
+            let physics_ptr = pw as *mut PhysicsWorld;
+            let sw_ptr = sw as *const crate::world::SceneWorld;
+            if let Err(e) = script_runtime.register_physics_api(physics_ptr, sw_ptr) {
+                tracing::error!("Failed to register physics API: {}", e);
+            }
+        }
+
+        // Register entity manipulation API
+        if let Some(sw) = &mut self.scene_world {
+            let sw_ptr = sw as *mut crate::world::SceneWorld;
+            if let Err(e) = script_runtime.register_entity_api(sw_ptr) {
+                tracing::error!("Failed to register entity API: {}", e);
+            }
+            // Entity command API (spawn, destroy, scale, visibility, pooling)
+            let cmd_ptr = &mut self.entity_commands as *mut crate::world::EntityCommandQueue;
+            let pool_mgr_ptr = &mut self.pool_manager as *mut crate::world::EntityPoolManager;
+            if let Err(e) = script_runtime.register_entity_command_api(sw_ptr, cmd_ptr, pool_mgr_ptr) {
+                tracing::error!("Failed to register entity command API: {}", e);
+            }
+        }
+
+        // Register UI overlay API
+        if let (Some(ui), Some(font), Some(gpu)) = (
+            &mut self.ui_renderer,
+            &self.bitmap_font,
+            &self.gpu,
+        ) {
+            let ui_ptr = ui as *mut UiRenderer;
+            let font_ptr = font as *const BitmapFont;
+            let config_ptr = &gpu.config as *const wgpu::SurfaceConfiguration;
+            if let Err(e) = script_runtime.register_ui_api(ui_ptr, font_ptr, config_ptr) {
+                tracing::error!("Failed to register UI API: {}", e);
+            }
+        }
+
+        // Register camera API
+        if let (Some(cs), Some(gpu)) = (&self.camera_state, &self.gpu) {
+            let cs_ptr = cs as *const crate::camera::CameraState;
+            let config_ptr = &gpu.config as *const wgpu::SurfaceConfiguration;
+            if let Err(e) = script_runtime.register_camera_api(cs_ptr, config_ptr) {
+                tracing::error!("Failed to register camera API: {}", e);
+            }
+        }
+
+        // Register camera shake API
+        {
+            let shake_ptr = &mut self.camera_shake as *mut CameraShakeState;
+            if let Err(e) = script_runtime.register_camera_shake_api(shake_ptr) {
+                tracing::error!("Failed to register camera shake API: {}", e);
+            }
+        }
+
+        // Register event bus API
+        {
+            let bus_ptr = &mut self.event_bus as *mut crate::events::EventBus;
+            let listeners_ptr = &mut self.lua_event_listeners as *mut HashMap<String, Vec<mlua::RegistryKey>>;
+            let next_id_ptr = &mut self.next_lua_listener_id as *mut u64;
+            let id_map_ptr = &mut self.lua_listener_id_map as *mut HashMap<u64, (String, usize)>;
+            if let Err(e) = script_runtime.register_event_api(bus_ptr, listeners_ptr, next_id_ptr, id_map_ptr) {
+                tracing::error!("Failed to register event API: {}", e);
+            }
+        }
+
+        // Register audio API
+        {
+            let audio_ptr = &mut self.audio_system as *mut AudioSystem;
+            if let Err(e) = script_runtime.register_audio_api(audio_ptr, self.project_root.clone()) {
+                tracing::error!("Failed to register audio API: {}", e);
+            }
+        }
+
+        // Register particle API
+        if let Some(sw) = &mut self.scene_world {
+            let sw_ptr = sw as *mut crate::world::SceneWorld;
+            let ps_ptr = &mut self.particle_system as *mut crate::particles::ParticleSystem;
+            if let Err(e) = script_runtime.register_particle_api(sw_ptr, ps_ptr) {
+                tracing::error!("Failed to register particle API: {}", e);
+            }
+        }
+
+        self.script_runtime = Some(script_runtime);
 
         self.last_frame_time = Some(instant::Instant::now());
 
@@ -1917,6 +2008,12 @@ impl Engine {
                             .and_then(|v| v.as_str()).unwrap_or("scenes/editor_scene.yaml");
                         format!("save -> {}", path)
                     }
+                    "run_lua" => {
+                        let code = pending.request.params.get("code")
+                            .and_then(|v| v.as_str()).unwrap_or("");
+                        let preview: String = code.chars().take(40).collect();
+                        format!("lua: {}", preview)
+                    }
                     other => other.to_string(),
                 };
                 self.editor_command_log.push((detail, instant::Instant::now()));
@@ -1948,6 +2045,7 @@ impl Engine {
                 "get_scene_yaml" => self.handle_get_scene_yaml(),
                 "set_camera" => self.handle_set_camera(&pending.request),
                 "editor_status" => self.handle_editor_status(),
+                "run_lua" => self.handle_run_lua(&pending.request),
                 _ => crate::command::handle_command(
                     &pending.request,
                     &mut self.scene_world,
@@ -2029,48 +2127,117 @@ impl Engine {
             .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect::<Vec<_>>())
             .unwrap_or_default();
 
-        let scene_world = match &mut self.scene_world {
-            Some(sw) => sw,
-            None => return CommandResponse::error("No scene loaded"),
-        };
+        // Spawn entity, apply rotation/tags (scoped to release scene_world borrow)
+        {
+            let scene_world = match &mut self.scene_world {
+                Some(sw) => sw,
+                None => return CommandResponse::error("No scene loaded"),
+            };
 
-        if scene_world.entity_registry.contains_key(&entity_id) {
-            return CommandResponse::error(format!("Entity '{}' already exists", entity_id));
-        }
+            if scene_world.entity_registry.contains_key(&entity_id) {
+                return CommandResponse::error(format!("Entity '{}' already exists", entity_id));
+            }
 
-        // Use spawn_runtime_entity for mesh entities
-        let ok = crate::world::spawn_runtime_entity(
-            scene_world,
-            &entity_id,
-            mesh,
-            material,
-            position,
-            scale,
-            device,
-            &self.project_root,
-            &mut self.mesh_cache,
-            &mut self.material_cache,
-        );
+            // Use spawn_runtime_entity for mesh entities
+            let ok = crate::world::spawn_runtime_entity(
+                scene_world,
+                &entity_id,
+                mesh,
+                material,
+                position,
+                scale,
+                device,
+                &self.project_root,
+                &mut self.mesh_cache,
+                &mut self.material_cache,
+            );
 
-        if !ok {
-            return CommandResponse::error(format!("Failed to spawn entity '{}'", entity_id));
-        }
+            if !ok {
+                return CommandResponse::error(format!("Failed to spawn entity '{}'", entity_id));
+            }
 
-        // Apply rotation if non-zero
-        if rotation != [0.0, 0.0, 0.0] {
-            if let Some(&entity) = scene_world.entity_registry.get(&entity_id) {
-                if let Ok(mut transform) = scene_world.world.get::<&mut Transform>(entity) {
-                    transform.rotation = crate::world::euler_degrees_to_quat(rotation);
-                    transform.dirty = true;
+            // Apply rotation if non-zero
+            if rotation != [0.0, 0.0, 0.0] {
+                if let Some(&entity) = scene_world.entity_registry.get(&entity_id) {
+                    if let Ok(mut transform) = scene_world.world.get::<&mut Transform>(entity) {
+                        transform.rotation = crate::world::euler_degrees_to_quat(rotation);
+                        transform.dirty = true;
+                    }
                 }
             }
-        }
 
-        // Apply tags
-        if !tags.is_empty() {
-            if let Some(&entity) = scene_world.entity_registry.get(&entity_id) {
-                if let Ok(mut entity_tags) = scene_world.world.get::<&mut crate::components::Tags>(entity) {
-                    entity_tags.0 = tags;
+            // Apply tags
+            if !tags.is_empty() {
+                if let Some(&entity) = scene_world.entity_registry.get(&entity_id) {
+                    if let Ok(mut entity_tags) = scene_world.world.get::<&mut crate::components::Tags>(entity) {
+                        entity_tags.0 = tags;
+                    }
+                }
+            }
+        } // scene_world borrow released here
+
+        // Add physics body if rigid_body/collider components are specified
+        if let Some(collider_json) = components.get("collider") {
+            // Parse collider shape from JSON
+            let shape_str = collider_json.get("shape").and_then(|v| v.as_str()).unwrap_or("box");
+            let shape = match shape_str {
+                "sphere" => crate::physics::PhysicsShape::Sphere {
+                    radius: collider_json.get("radius").and_then(|v| v.as_f64()).unwrap_or(0.5) as f32,
+                },
+                "capsule" => crate::physics::PhysicsShape::Capsule {
+                    half_height: collider_json.get("half_height").and_then(|v| v.as_f64()).unwrap_or(0.5) as f32,
+                    radius: collider_json.get("radius").and_then(|v| v.as_f64()).unwrap_or(0.3) as f32,
+                },
+                _ => {
+                    let he = if let Some(arr) = collider_json.get("half_extents").and_then(|v| v.as_array()) {
+                        if arr.len() == 3 {
+                            glam::Vec3::new(
+                                arr[0].as_f64().unwrap_or(0.5) as f32,
+                                arr[1].as_f64().unwrap_or(0.5) as f32,
+                                arr[2].as_f64().unwrap_or(0.5) as f32,
+                            )
+                        } else {
+                            glam::Vec3::splat(0.5)
+                        }
+                    } else {
+                        glam::Vec3::new(scale[0] * 0.5, scale[1] * 0.5, scale[2] * 0.5)
+                    };
+                    crate::physics::PhysicsShape::Box { half_extents: he }
+                }
+            };
+
+            let is_trigger = collider_json.get("is_trigger").and_then(|v| v.as_bool()).unwrap_or(false);
+            let restitution = collider_json.get("restitution").and_then(|v| v.as_f64()).unwrap_or(0.3) as f32;
+            let friction = collider_json.get("friction").and_then(|v| v.as_f64()).unwrap_or(0.5) as f32;
+
+            let rb_json = components.get("rigid_body");
+            let body_type = rb_json.and_then(|rb| rb.get("type")).and_then(|v| v.as_str()).unwrap_or("static");
+
+            let pos = glam::Vec3::from(position);
+            let rot = crate::world::euler_degrees_to_quat(rotation);
+
+            if let (Some(pw), Some(sw)) = (&mut self.physics_world, &mut self.scene_world) {
+                if let Some(&entity) = sw.entity_registry.get(&entity_id) {
+                    match body_type {
+                        "dynamic" => {
+                            let mass = rb_json.and_then(|rb| rb.get("mass")).and_then(|v| v.as_f64()).unwrap_or(1.0) as f32;
+                            let ccd = rb_json.and_then(|rb| rb.get("ccd")).and_then(|v| v.as_bool()).unwrap_or(false);
+                            let (rb_handle, col_handle) = pw
+                                .add_dynamic_body(entity, pos, rot, shape.clone(), mass, restitution, friction, ccd);
+                            let _ = sw.world.insert(entity, (
+                                crate::physics::RigidBody { handle: rb_handle, body_type: crate::physics::PhysicsBodyType::Dynamic },
+                                crate::physics::Collider { handle: col_handle, shape, is_trigger },
+                            ));
+                        }
+                        _ => {
+                            let (rb_handle, col_handle) = pw
+                                .add_static_body(entity, pos, rot, shape.clone(), is_trigger, restitution, friction);
+                            let _ = sw.world.insert(entity, (
+                                crate::physics::RigidBody { handle: rb_handle, body_type: crate::physics::PhysicsBodyType::Static },
+                                crate::physics::Collider { handle: col_handle, shape, is_trigger },
+                            ));
+                        }
+                    }
                 }
             }
         }
@@ -2189,6 +2356,82 @@ impl Engine {
             "scene_path": scene_path,
             "camera": camera_info,
         }))
+    }
+
+    /// Handle run_lua: execute arbitrary Lua code with access to all registered APIs.
+    fn handle_run_lua(&mut self, req: &crate::command::CommandRequest) -> crate::command::CommandResponse {
+        use crate::command::CommandResponse;
+        use serde_json::json;
+
+        let code = match req.params.get("code").and_then(|v| v.as_str()) {
+            Some(c) if !c.is_empty() => c,
+            _ => return CommandResponse::error("Missing or empty 'code' parameter"),
+        };
+
+        let script_runtime = match &self.script_runtime {
+            Some(sr) => sr,
+            None => return CommandResponse::error("Script runtime not initialized"),
+        };
+
+        let lua = &script_runtime.lua;
+
+        // Create a sandboxed environment with __index fallback to globals
+        // This gives access to all registered API tables (entity, physics, particles, etc.)
+        let result: Result<mlua::Value, mlua::Error> = (|| {
+            let env = lua.create_table()?;
+            let meta = lua.create_table()?;
+            meta.set("__index", lua.globals())?;
+            env.set_metatable(Some(meta));
+
+            // Capture print output
+            let output = std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+            let output_clone = output.clone();
+            let print_fn = lua.create_function(move |_, args: mlua::MultiValue| {
+                let parts: Vec<String> = args.iter().map(|v| format!("{:?}", v)).collect();
+                let line = parts.join("\t");
+                if let Ok(mut out) = output_clone.lock() {
+                    out.push(line);
+                }
+                Ok(())
+            })?;
+            env.set("print", print_fn)?;
+
+            let value = lua.load(code)
+                .set_name("run_lua")
+                .set_environment(env)
+                .eval::<mlua::Value>()?;
+
+            // Format return value
+            let result_str = match &value {
+                mlua::Value::Nil => "nil".to_string(),
+                mlua::Value::Boolean(b) => b.to_string(),
+                mlua::Value::Integer(i) => i.to_string(),
+                mlua::Value::Number(n) => n.to_string(),
+                mlua::Value::String(s) => s.to_str().unwrap_or("").to_string(),
+                other => format!("{:?}", other),
+            };
+
+            let print_output = output.lock().map(|o| o.clone()).unwrap_or_default();
+
+            Ok(mlua::Value::String(lua.create_string(&json!({
+                "result": result_str,
+                "print_output": print_output,
+            }).to_string())?))
+        })();
+
+        match result {
+            Ok(val) => {
+                // Parse back the JSON we stuffed in
+                if let mlua::Value::String(s) = val {
+                    let s = s.to_str().unwrap_or("{}");
+                    let parsed: serde_json::Value = serde_json::from_str(s).unwrap_or(json!({"result": s}));
+                    CommandResponse::ok(parsed)
+                } else {
+                    CommandResponse::ok(json!({"result": "ok"}))
+                }
+            }
+            Err(e) => CommandResponse::error(format!("Lua error: {}", e)),
+        }
     }
 
     /// Serialize the current ECS scene state to YAML.
