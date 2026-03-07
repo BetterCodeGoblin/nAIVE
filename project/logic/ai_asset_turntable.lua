@@ -24,6 +24,8 @@ function update(dt)
     -- Position camera at orbit distance looking at model
     entity.set_position("player", 0, self.cam_height, self.zoom)
 
-    ui.text(20, 20, "3D Asset Turntable", 24, 1, 1, 1, 1)
-    ui.text(20, 50, "Scroll to zoom | WASD to walk", 14, 0.7, 0.7, 0.7, 1)
+    if ui then
+        ui.text(20, 20, "3D Asset Turntable", 24, 1, 1, 1, 1)
+        ui.text(20, 50, "Scroll to zoom | WASD to walk", 14, 0.7, 0.7, 0.7, 1)
+    end
 end

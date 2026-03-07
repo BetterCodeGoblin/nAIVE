@@ -30,6 +30,10 @@ pub struct CliArgs {
     /// Show the render debug HUD on startup
     #[arg(long, global = true)]
     pub hud: bool,
+
+    /// Editor mode (set internally by `naive edit`)
+    #[arg(skip)]
+    pub editor_mode: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -69,6 +73,12 @@ pub enum Command {
     Demos {
         /// Demo number or name (omit for interactive selection)
         selector: Option<String>,
+    },
+    /// Open the AI-powered scene editor
+    Edit {
+        /// Scene file to edit (creates default scene if omitted)
+        #[arg(long)]
+        scene: Option<String>,
     },
 }
 

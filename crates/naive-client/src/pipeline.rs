@@ -913,7 +913,9 @@ pub fn compile_pipeline(
 
 /// Compile a pass shader: try SLANG, fallback to WGSL.
 fn compile_pass_shader(shader_path: &Path, pass_name: &str) -> Result<String, PipelineError> {
-    if shader_path.exists() {
+    // Skip SLANG for geometry pass — SLANG-compiled WGSL doesn't support dynamic-offset UBOs correctly
+    let skip_slang = pass_name.contains("geometry") || pass_name.contains("gbuffer");
+    if shader_path.exists() && !skip_slang {
         match crate::shader::compile_slang_to_wgsl_public(shader_path) {
             Ok(wgsl) => {
                 tracing::info!("SLANG compiled for pass '{}': {:?}", pass_name, shader_path);

@@ -1,0 +1,3347 @@
+name: Bouncing Balls
+settings:
+  ambient_light:
+  - 0.15
+  - 0.15
+  - 0.2
+  fog: null
+  gravity:
+  - 0.0
+  - -9.81
+  - 0.0
+entities:
+- id: ball_13
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -3.73
+      - 0.29872432
+      - 2.37
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.6
+      - 0.6
+      - 0.6
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_7
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -25.925522
+      - -542395.8
+      - 297.81128
+      rotation:
+      - -12.945387
+      - 81.81241
+      - 65.04026
+      scale:
+      - 0.66
+      - 0.66
+      - 0.66
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_14
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 76.1936
+      - -818657.2
+      - 346.1914
+      rotation:
+      - -46.315105
+      - 159.97858
+      - -10.759936
+      scale:
+      - 0.49
+      - 0.49
+      - 0.49
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_21
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -1.61
+      - 0.27372414
+      - 7.96
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.55
+      - 0.55
+      - 0.55
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_17
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 5.0
+      - 1.7
+      - -7.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.4
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_11
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 5.5
+      - 4.38
+      - -5.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.8
+      - 1.8
+      - 1.8
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_light
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_20
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.98
+      - 0.37372416
+      - 1.35
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.75
+      - 0.75
+      - 0.75
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_5
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 4.89
+      - 0.18872403
+      - -2.56
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.38
+      - 0.38
+      - 0.38
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_2
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -1.5
+      - 1.75
+      - -4.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.5
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_20
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.5
+      - 5.12
+      - -9.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 2.2
+      - 2.2
+      - 2.2
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_41
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 843.98926
+      - -877241.06
+      - 482.7085
+      rotation:
+      - -29.848282
+      - -30.729227
+      - 91.554474
+      scale:
+      - 0.63
+      - 0.63
+      - 0.63
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_6
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 7.32
+      - 0.17372406
+      - -6.52
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.35
+      - 0.35
+      - 0.35
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: key_light
+  tags:
+  - light
+  extends: null
+  components:
+    transform:
+      position:
+      - 5.0
+      - 8.0
+      - 5.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.0
+      - 1.0
+      - 1.0
+    mesh_renderer: null
+    camera: null
+    point_light:
+      color:
+      - 1.0
+      - 0.9
+      - 0.8
+      intensity: 50.0
+      range: 30.0
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_5
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 7.0
+      - 1.3
+      - -4.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 2.6
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_43
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -0.44
+      - 0.19872405
+      - 4.92
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.4
+      - 0.4
+      - 0.4
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_44
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -321.0083
+      - -795844.44
+      - -12.836121
+      rotation:
+      - 16.304333
+      - -20.921488
+      - -115.89412
+      scale:
+      - 0.53
+      - 0.53
+      - 0.53
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_17
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -48.5567
+      - -877864.5
+      - -1041.3574
+      rotation:
+      - 71.75131
+      - -19.772856
+      - -35.123093
+      scale:
+      - 0.77
+      - 0.77
+      - 0.77
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_18
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 528.8262
+      - -850360.9
+      - 102.30939
+      rotation:
+      - -15.594795
+      - -20.470749
+      - -65.78003
+      scale:
+      - 0.5
+      - 0.5
+      - 0.5
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_35
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -0.4
+      - 0.36872414
+      - -3.76
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.74
+      - 0.74
+      - 0.74
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_6
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -8.0
+      - 5.12
+      - -5.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 2.2
+      - 2.2
+      - 2.2
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_dark
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_8
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -3.0
+      - 4.02
+      - -5.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.7
+      - 1.7
+      - 1.7
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_light
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_11
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 5.5
+      - 1.65
+      - -5.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.3
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_13
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -7.5
+      - 2.0
+      - -7.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 4.0
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_20
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.5
+      - 1.9
+      - -9.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.8
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_15
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 7.83
+      - 0.3187242
+      - 0.91
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.64
+      - 0.64
+      - 0.64
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_25
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -857.24023
+      - -872763.44
+      - 601.11523
+      rotation:
+      - 44.594086
+      - -13.397566
+      - 63.604553
+      scale:
+      - 0.57
+      - 0.57
+      - 0.57
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_30
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 4.2
+      - 0.28372425
+      - 4.46
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.57
+      - 0.57
+      - 0.57
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ground
+  tags:
+  - ground
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.0
+      - -0.5
+      - 0.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 20.0
+      - 1.0
+      - 20.0
+    mesh_renderer:
+      mesh: procedural:cube
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_48
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -4.0
+      - 0.3637243
+      - -0.91
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.73
+      - 0.73
+      - 0.73
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_7
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -5.5
+      - 1.2
+      - -6.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 2.4
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_19
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -6.0
+      - 4.7
+      - -9.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 2.0
+      - 2.0
+      - 2.0
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_dark
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_12
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 2.17
+      - 0.19872409
+      - -2.08
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.4
+      - 0.4
+      - 0.4
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_47
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -4.96
+      - 0.21872404
+      - -1.25
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.44
+      - 0.44
+      - 0.44
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_42
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -4.57
+      - 0.29372415
+      - 6.97
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.59
+      - 0.59
+      - 0.59
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_21
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 6.0
+      - 1.5
+      - -9.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.0
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_1
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -4.5
+      - 1.25
+      - -3.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 2.5
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_4
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 4.0
+      - 1.6
+      - -3.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.2
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_21
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 6.0
+      - 4.08
+      - -9.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.8
+      - 1.8
+      - 1.8
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_light
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_16
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -1878.5039
+      - -876258.5
+      - -1105.0332
+      rotation:
+      - 30.252432
+      - -29.721169
+      - -89.49917
+      scale:
+      - 0.32
+      - 0.32
+      - 0.32
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_15
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -1.0
+      - 4.86
+      - -7.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 2.1
+      - 2.1
+      - 2.1
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_light
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_11
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -728.85254
+      - -879468.1
+      - 312.48877
+      rotation:
+      - -59.620037
+      - 172.99097
+      - -19.640615
+      scale:
+      - 0.44
+      - 0.44
+      - 0.44
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_14
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -4.0
+      - 1.6
+      - -8.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.2
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_19
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 6.63
+      - 0.20872408
+      - -3.76
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.42
+      - 0.42
+      - 0.42
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_8
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 1022.3047
+      - -874105.94
+      - 341.61816
+      rotation:
+      - 11.520433
+      - 5.553477
+      - 130.0912
+      scale:
+      - 0.58
+      - 0.58
+      - 0.58
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_0
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -7.0
+      - 4.08
+      - -3.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.8
+      - 1.8
+      - 1.8
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_12
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 8.0
+      - 1.45
+      - -5.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 2.9
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_32
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 6.06
+      - 0.16372405
+      - -3.08
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.33
+      - 0.33
+      - 0.33
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_4
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 4.0
+      - 4.34
+      - -3.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.9
+      - 1.9
+      - 1.9
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_dark
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_23
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 4.67
+      - 0.24372403
+      - -6.98
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.49
+      - 0.49
+      - 0.49
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_2
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -1.25
+      - 0.27372432
+      - -4.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.55
+      - 0.55
+      - 0.55
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_12
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 8.0
+      - 3.86
+      - -5.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.6
+      - 1.6
+      - 1.6
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_16
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 2.0
+      - 1.4
+      - -8.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 2.8
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_3
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 1.0
+      - 1.4
+      - -3.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 2.8
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_10
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 3.27
+      - 0.21872409
+      - -4.35
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.44
+      - 0.44
+      - 0.44
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_18
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 7.5
+      - 1.5
+      - -8.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.0
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_18
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 7.5
+      - 4.02
+      - -8.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.7
+      - 1.7
+      - 1.7
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_light
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_19
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -6.0
+      - 1.75
+      - -9.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.5
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_46
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -68.62738
+      - -815319.3
+      - 298.11426
+      rotation:
+      - 22.224443
+      - -2.0800827
+      - 76.79955
+      scale:
+      - 0.42
+      - 0.42
+      - 0.42
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: camera
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.0
+      - 5.0
+      - 15.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.0
+      - 1.0
+      - 1.0
+    mesh_renderer: null
+    camera:
+      fov: 75.0
+      near: 0.1
+      far: 500.0
+      role: main
+      mode: first_person
+      distance: 4.0
+      height_offset: 1.5
+      pitch_limits: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_2
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -1.5
+      - 4.7
+      - -4.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 2.0
+      - 2.0
+      - 2.0
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_light
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_8
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -3.0
+      - 1.5
+      - -5.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.0
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_9
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.0
+      - 1.75
+      - -5.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.5
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_14
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -4.0
+      - 4.34
+      - -8.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.9
+      - 1.9
+      - 1.9
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_dark
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_0
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 2.23
+      - 0.2037241
+      - -3.6
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.41
+      - 0.41
+      - 0.41
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_1
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 3.78
+      - 0.16872403
+      - 6.27
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.34
+      - 0.34
+      - 0.34
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_9
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.0
+      - 4.7
+      - -5.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 2.0
+      - 2.0
+      - 2.0
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_dark
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_16
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 2.0
+      - 3.76
+      - -8.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.6
+      - 1.6
+      - 1.6
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_17
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 5.0
+      - 4.6
+      - -7.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 2.0
+      - 2.0
+      - 2.0
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_dark
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_5
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 7.0
+      - 3.44
+      - -4.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.4
+      - 1.4
+      - 1.4
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_light
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_36
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -1.23
+      - 0.32872418
+      - 0.63
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.66
+      - 0.66
+      - 0.66
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: fill_light
+  tags:
+  - light
+  extends: null
+  components:
+    transform:
+      position:
+      - -5.0
+      - 6.0
+      - -3.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.0
+      - 1.0
+      - 1.0
+    mesh_renderer: null
+    camera: null
+    point_light:
+      color:
+      - 0.6
+      - 0.7
+      - 1.0
+      intensity: 30.0
+      range: 25.0
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_3
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 175.41504
+      - -821339.94
+      - -396.68604
+      rotation:
+      - 0.4236621
+      - 132.57886
+      - 177.32954
+      scale:
+      - 0.57
+      - 0.57
+      - 0.57
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_3
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 1.0
+      - 3.76
+      - -3.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.6
+      - 1.6
+      - 1.6
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_28
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.01
+      - 0.36872417
+      - 6.6
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.74
+      - 0.74
+      - 0.74
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_13
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -7.5
+      - 5.38
+      - -7.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 2.3
+      - 2.3
+      - 2.3
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_10
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 2.5
+      - 1.35
+      - -6.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 2.7
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_0
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -7.0
+      - 1.5
+      - -3.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.0
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_34
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -6.89
+      - 0.17872404
+      - 4.25
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.36
+      - 0.36
+      - 0.36
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_27
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -0.74
+      - 0.21372409
+      - 6.01
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.43
+      - 0.43
+      - 0.43
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_29
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -3.22
+      - 0.18872401
+      - 1.74
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.38
+      - 0.38
+      - 0.38
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: sun
+  tags:
+  - light
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.0
+      - 0.0
+      - 0.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.0
+      - 1.0
+      - 1.0
+    mesh_renderer: null
+    camera: null
+    point_light: null
+    directional_light:
+      direction:
+      - 0.25916055
+      - -0.8638684
+      - 0.4319342
+      color:
+      - 1.0
+      - 0.95
+      - 0.9
+      intensity: 3.0
+      shadow_extent: 30.0
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_31
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -736.9673
+      - -883145.94
+      - -1449.252
+      rotation:
+      - -66.32435
+      - -11.988967
+      - 39.819626
+      scale:
+      - 0.76
+      - 0.76
+      - 0.76
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_37
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -354.73438
+      - -783876.6
+      - 47.174194
+      rotation:
+      - -6.3868423
+      - 11.895261
+      - -165.54506
+      scale:
+      - 0.62
+      - 0.62
+      - 0.62
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_38
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -0.99
+      - 0.203724
+      - -6.06
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.41
+      - 0.41
+      - 0.41
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_39
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 324.93408
+      - -861477.0
+      - 906.60156
+      rotation:
+      - -26.427546
+      - -124.94464
+      - 157.53236
+      scale:
+      - 0.41
+      - 0.41
+      - 0.41
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_24
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 389.9463
+      - -813322.75
+      - 94.56111
+      rotation:
+      - -42.612907
+      - -95.81138
+      - -91.491165
+      scale:
+      - 0.73
+      - 0.73
+      - 0.73
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_40
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -6.86
+      - 0.37372413
+      - -4.34
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.75
+      - 0.75
+      - 0.75
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_45
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -10.088013
+      - -622094.25
+      - 235.08594
+      rotation:
+      - -36.954964
+      - 59.75805
+      - -37.76402
+      scale:
+      - 0.35
+      - 0.35
+      - 0.35
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_22
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -656.7871
+      - -869952.6
+      - 290.10596
+      rotation:
+      - 34.139507
+      - -58.534885
+      - -165.27272
+      scale:
+      - 0.61
+      - 0.61
+      - 0.61
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_1
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -4.5
+      - 3.4
+      - -3.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.5
+      - 1.5
+      - 1.5
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy_dark
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_6
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -8.0
+      - 1.9
+      - -5.5
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.8
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_7
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -5.5
+      - 3.18
+      - -6.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.3
+      - 1.3
+      - 1.3
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_49
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 0.81
+      - 0.35872418
+      - 7.99
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.72
+      - 0.72
+      - 0.72
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_canopy_10
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - 2.5
+      - 3.6
+      - -6.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 1.5
+      - 1.5
+      - 1.5
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: assets/materials/tree_canopy
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: tree_trunk_15
+  tags: []
+  extends: null
+  components:
+    transform:
+      position:
+      - -1.0
+      - 1.8
+      - -7.0
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 3.6
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:cube
+      material: assets/materials/wood
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_33
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - 6.05
+      - 0.26872432
+      - -6.63
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.54
+      - 0.54
+      - 0.54
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_9
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -6.1868896
+      - -729700.44
+      - 322.7705
+      rotation:
+      - -48.42189
+      - 85.40123
+      - -167.93079
+      scale:
+      - 0.59
+      - 0.59
+      - 0.59
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_26
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -3.73
+      - 0.25872412
+      - -6.22
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.52
+      - 0.52
+      - 0.52
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null
+- id: ball_4
+  tags:
+  - ball
+  extends: null
+  components:
+    transform:
+      position:
+      - -4.47
+      - 0.14872405
+      - 4.95
+      rotation:
+      - -0.0
+      - 0.0
+      - 0.0
+      scale:
+      - 0.3
+      - 0.3
+      - 0.3
+    mesh_renderer:
+      mesh: procedural:sphere
+      material: procedural:default
+      cast_shadows: true
+      receive_shadows: true
+    camera: null
+    point_light: null
+    directional_light: null
+    gaussian_splat: null
+    rigid_body: null
+    collider: null
+    character_controller: null
+    script: null
+    health: null
+    collision_damage: null
+    particle_emitter: null

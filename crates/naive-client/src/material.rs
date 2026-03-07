@@ -39,7 +39,7 @@ fn default_back() -> String {
     "back".to_string()
 }
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MaterialProperties {
     #[serde(default = "default_base_color")]
     pub base_color: [f32; 3],
@@ -54,6 +54,19 @@ pub struct MaterialProperties {
     pub albedo_map: Option<String>,
     #[serde(default)]
     pub normal_map: Option<String>,
+}
+
+impl Default for MaterialProperties {
+    fn default() -> Self {
+        Self {
+            base_color: default_base_color(),
+            roughness: default_roughness(),
+            metallic: 0.0,
+            emission: [0.0; 3],
+            albedo_map: None,
+            normal_map: None,
+        }
+    }
 }
 
 fn default_base_color() -> [f32; 3] {
@@ -137,6 +150,12 @@ impl MaterialCache {
         };
 
         let uniform = MaterialUniform::from_properties(&mat_file.properties);
+        tracing::warn!(
+            "Material '{}' base_color=[{:.3},{:.3},{:.3},{:.3}] roughness={:.2}",
+            material_path,
+            uniform.base_color[0], uniform.base_color[1], uniform.base_color[2], uniform.base_color[3],
+            uniform.roughness
+        );
         let gpu_material = GpuMaterial { uniform };
 
         let handle = MaterialHandle(self.materials.len());
@@ -148,6 +167,16 @@ impl MaterialCache {
 
     pub fn get(&self, handle: MaterialHandle) -> &GpuMaterial {
         &self.materials[handle.0]
+    }
+
+    /// Get the path/name for a material handle (reverse lookup for serialization).
+    pub fn name_for_handle(&self, handle: MaterialHandle) -> Option<String> {
+        for (path, &h) in &self.path_to_handle {
+            if h.0 == handle.0 {
+                return Some(path.to_string_lossy().to_string());
+            }
+        }
+        None
     }
 
     #[allow(dead_code)]
