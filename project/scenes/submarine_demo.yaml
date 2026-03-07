@@ -1,0 +1,84 @@
+name: "Submarine Demo — Textured GLB + Physics Rain"
+settings:
+  ambient_light: [0.15, 0.18, 0.25]
+  gravity: [0, -9.81, 0]
+
+entities:
+  # === Player (FPS Camera) ===
+  - id: player
+    components:
+      transform:
+        position: [0, 3, 12]
+      camera:
+        fov: 50
+        near: 0.1
+        far: 200
+        role: main
+      character_controller:
+        move_speed: 5.0
+        sprint_multiplier: 1.8
+        jump_impulse: 7.0
+        step_height: 0.3
+        height: 1.8
+        radius: 0.4
+
+  # === Ocean floor ===
+  - id: floor
+    components:
+      transform:
+        position: [0, -0.25, 0]
+        scale: [30, 0.2, 30]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/dark_floor.yaml
+      collider:
+        shape: box
+        half_extents: [15, 0.1, 15]
+        friction: 0.5
+
+  # === Submarine (Meshy AI generated, textured GLB) ===
+  - id: submarine
+    tags: [ai_generated, meshy, submarine]
+    components:
+      transform:
+        position: [0, 1.5, 0]
+        scale: [5, 5, 5]
+      mesh_renderer:
+        mesh: assets/meshes/submarine.glb
+        material: assets/materials/default.yaml
+      script:
+        source: logic/submarine_demo.lua
+      collider:
+        shape: box
+        half_extents: [4, 1.5, 1.5]
+        friction: 0.3
+      rigid_body:
+        type: static
+
+  # === Three-point lighting ===
+  - id: key_light
+    components:
+      transform:
+        position: [8, 12, 8]
+      point_light:
+        color: [1.0, 0.95, 0.9]
+        intensity: 100.0
+        range: 35.0
+
+  - id: fill_light
+    components:
+      transform:
+        position: [-6, 5, -4]
+      point_light:
+        color: [0.5, 0.6, 1.0]
+        intensity: 40.0
+        range: 25.0
+
+  - id: rim_light
+    components:
+      transform:
+        position: [0, 8, -10]
+      point_light:
+        color: [1.0, 1.0, 1.0]
+        intensity: 50.0
+        range: 25.0
