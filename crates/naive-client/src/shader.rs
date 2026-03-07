@@ -316,12 +316,15 @@ struct DrawUniforms {
     base_color: vec4<f32>,
     roughness: f32,
     metallic: f32,
-    _pad: vec2<f32>,
+    has_texture: f32,
+    _pad: f32,
     emission: vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> camera: CameraUniform;
 @group(1) @binding(0) var<uniform> draw: DrawUniforms;
+@group(2) @binding(0) var albedo_texture: texture_2d<f32>;
+@group(2) @binding(1) var albedo_sampler: sampler;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -359,7 +362,12 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let ndotl = max(dot(in.world_normal, light_dir), 0.0);
     let ndoth = max(dot(in.world_normal, half_vec), 0.0);
 
-    let base = draw.base_color.rgb * in.vertex_color.rgb;
+    var base = draw.base_color.rgb * in.vertex_color.rgb;
+    if (draw.has_texture > 0.5) {
+        let tex_color = textureSample(albedo_texture, albedo_sampler, in.tex_coords);
+        base = base * tex_color.rgb;
+    }
+
     let diffuse_color = base * (1.0 - draw.metallic);
     let F0 = mix(vec3<f32>(0.04), base, draw.metallic);
 
@@ -547,12 +555,15 @@ struct DrawUniforms {
     base_color: vec4<f32>,
     roughness: f32,
     metallic: f32,
-    _pad: vec2<f32>,
+    has_texture: f32,
+    _pad: f32,
     emission: vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> camera: CameraUniform;
 @group(1) @binding(0) var<uniform> draw: DrawUniforms;
+@group(2) @binding(0) var albedo_texture: texture_2d<f32>;
+@group(2) @binding(1) var albedo_sampler: sampler;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -590,7 +601,12 @@ fn vs_main(model: VertexInput) -> VertexOutput {
 @fragment
 fn fs_main(in: VertexOutput) -> GBufferOutput {
     var out: GBufferOutput;
-    out.albedo = vec4<f32>(draw.base_color.rgb * in.vertex_color.rgb, draw.roughness);
+    var albedo = draw.base_color.rgb * in.vertex_color.rgb;
+    if (draw.has_texture > 0.5) {
+        let tex_color = textureSample(albedo_texture, albedo_sampler, in.tex_coords);
+        albedo = albedo * tex_color.rgb;
+    }
+    out.albedo = vec4<f32>(albedo, draw.roughness);
     out.normal = vec4<f32>(in.world_normal * 0.5 + 0.5, draw.metallic);
     out.emission = vec4<f32>(draw.emission.rgb, 0.0);
     return out;
@@ -1508,7 +1524,8 @@ struct DrawUniforms {
     base_color: vec4<f32>,
     roughness: f32,
     metallic: f32,
-    _pad: vec2<f32>,
+    has_texture: f32,
+    _pad: f32,
     emission: vec4<f32>,
     _padding: array<vec4<f32>, 5>,
 };

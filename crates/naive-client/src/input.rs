@@ -136,6 +136,8 @@ pub struct InputState {
     scroll_delta: Vec2,
     // Cursor position
     cursor_position: Vec2,
+    // Cursor position snapshot for frame-level delta computation
+    frame_cursor_snapshot: Option<Vec2>,
     // Whether the cursor is captured (for FPS camera)
     pub cursor_captured: bool,
     // Synthetic input queue (for MCP/testing)
@@ -158,6 +160,7 @@ impl InputState {
             mouse_delta: Vec2::ZERO,
             scroll_delta: Vec2::ZERO,
             cursor_position: Vec2::ZERO,
+            frame_cursor_snapshot: None,
             cursor_captured: false,
             synthetic_keys_pressed: HashSet::new(),
             synthetic_keys_released: HashSet::new(),
@@ -246,10 +249,15 @@ impl InputState {
     }
 
     /// Process a winit DeviceEvent (for raw mouse motion).
+    /// Only uses DeviceEvent delta when cursor is captured (locked mode),
+    /// since CursorMoved won't fire when locked. When cursor is free,
+    /// delta is computed from CursorMoved instead (reliable on macOS).
     pub fn handle_device_event(&mut self, event: &DeviceEvent) {
         if let DeviceEvent::MouseMotion { delta } = event {
-            self.mouse_delta.x += delta.0 as f32;
-            self.mouse_delta.y += delta.1 as f32;
+            if self.cursor_captured {
+                self.mouse_delta.x += delta.0 as f32;
+                self.mouse_delta.y += delta.1 as f32;
+            }
         }
     }
 
@@ -369,6 +377,20 @@ impl InputState {
             axis = axis.normalize();
         }
         axis
+    }
+
+    /// Compute mouse delta from cursor position snapshot.
+    /// Call once per frame before reading mouse_delta(), when cursor is not captured.
+    /// Uses position snapshots so event ordering doesn't matter.
+    pub fn compute_cursor_delta(&mut self) {
+        if !self.cursor_captured {
+            if let Some(prev) = self.frame_cursor_snapshot {
+                self.mouse_delta = self.cursor_position - prev;
+            } else {
+                self.mouse_delta = Vec2::ZERO;
+            }
+            self.frame_cursor_snapshot = Some(self.cursor_position);
+        }
     }
 
     /// Get raw mouse delta this frame.
