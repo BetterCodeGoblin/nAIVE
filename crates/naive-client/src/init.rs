@@ -136,7 +136,7 @@ entities:
         intensity: 15.0
         range: 100.0
       script:
-        path: logic/my_script.lua
+        source: logic/my_script.lua
       player: {{}}                      # marks as FPS player
       character_controller:
         speed: 5.0
@@ -641,7 +641,7 @@ entities:
         mesh: procedural:cube
         material: assets/materials/default.yaml
       script:
-        path: logic/main.lua
+        source: logic/main.lua
 "#
         ),
     )?;

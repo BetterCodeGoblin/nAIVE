@@ -208,7 +208,7 @@ entities:
         jump_force: 8.0
       player: {}
       script:
-        path: logic/player.lua
+        source: logic/player.lua
 
   - id: sun
     components:
