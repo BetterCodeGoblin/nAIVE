@@ -29,6 +29,7 @@ pub fn execute_pipeline(
     debug: &RenderDebugState,
     texture_resources: Option<&crate::mesh::TextureResources>,
     bone_palettes: &HashMap<hecs::Entity, crate::anim_system::BoneMatrixPalette>,
+    texture_cache: Option<&crate::texture_cache::TextureCache>,
 ) {
     let output = match gpu.surface.get_current_texture() {
         Ok(t) => t,
@@ -49,7 +50,7 @@ pub fn execute_pipeline(
     let encoder = execute_pipeline_to_view(
         gpu, compiled, scene_world, camera_state, draw_pool,
         mesh_cache, material_cache, splat_cache, &swapchain_view, debug,
-        texture_resources, bone_palettes,
+        texture_resources, bone_palettes, texture_cache,
     );
 
     gpu.queue.submit(std::iter::once(encoder.finish()));
@@ -70,6 +71,7 @@ pub fn execute_pipeline_to_view(
     debug: &RenderDebugState,
     texture_resources: Option<&crate::mesh::TextureResources>,
     bone_palettes: &HashMap<hecs::Entity, crate::anim_system::BoneMatrixPalette>,
+    texture_cache: Option<&crate::texture_cache::TextureCache>,
 ) -> wgpu::CommandEncoder {
 
     // Upload per-entity draw uniforms (skip hidden entities before incrementing draw_index)
@@ -111,7 +113,7 @@ pub fn execute_pipeline_to_view(
             .unwrap_or(material.uniform.base_color);
 
         let gpu_mesh = mesh_cache.get(mesh_renderer.mesh_handle);
-        let has_texture = if gpu_mesh.texture_bind_group.is_some() { 1.0f32 } else { 0.0f32 };
+        let has_texture = if material.albedo_texture.is_some() || gpu_mesh.texture_bind_group.is_some() { 1.0f32 } else { 0.0f32 };
         // Check if entity has skeletal animation
         let entity_has_skin = scene_world.world
             .get::<&crate::components::Animator>(entity)
@@ -253,8 +255,10 @@ pub fn execute_pipeline_to_view(
                     camera_state,
                     draw_pool,
                     mesh_cache,
+                    material_cache,
                     texture_resources,
                     bone_palettes,
+                    texture_cache,
                 );
             }
             PassType::Fullscreen => {
@@ -384,8 +388,10 @@ fn execute_rasterize_pass(
     camera_state: &CameraState,
     draw_pool: &DrawUniformPool,
     mesh_cache: &MeshCache,
+    material_cache: &MaterialCache,
     texture_resources: Option<&crate::mesh::TextureResources>,
     bone_palettes: &HashMap<hecs::Entity, crate::anim_system::BoneMatrixPalette>,
+    texture_cache: Option<&crate::texture_cache::TextureCache>,
 ) {
     // Build color attachments from pass targets
     let color_views: Vec<&wgpu::TextureView> = pass
@@ -452,10 +458,16 @@ fn execute_rasterize_pass(
 
             render_pass.set_bind_group(1, &draw_pool.bind_group, &[dynamic_offset]);
 
-            // Bind texture at group(2): use mesh's texture or fallback to white
+            // Bind texture at group(2): material texture > mesh texture > white fallback
             if let Some(tex_res) = texture_resources {
-                let tex_bg = gpu_mesh.texture_bind_group.as_ref()
-                    .unwrap_or(&tex_res.default_bind_group);
+                let material = material_cache.get(mesh_renderer.material_handle);
+                let tex_bg = if let (Some(albedo_handle), Some(tc)) = (material.albedo_texture, texture_cache) {
+                    tc.get(albedo_handle)
+                } else if let Some(mesh_tex) = gpu_mesh.texture_bind_group.as_ref() {
+                    mesh_tex
+                } else {
+                    &tex_res.default_bind_group
+                };
                 render_pass.set_bind_group(2, tex_bg, &[]);
             }
 

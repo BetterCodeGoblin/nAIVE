@@ -158,6 +158,10 @@ entities:
 
 - `procedural:cube` — unit cube (built-in)
 - `procedural:sphere` — UV sphere, radius 0.5 (built-in)
+- `procedural:plane` — XZ plane, 1x1 (built-in)
+- `procedural:cylinder` — Y-axis cylinder, radius 0.5, height 1.0 (built-in)
+- `procedural:cone` — Y-axis cone, radius 0.5, height 1.0 (built-in)
+- `procedural:torus` — torus (donut), major radius 0.3, minor radius 0.1 (built-in)
 - `assets/meshes/file.gltf` — load a glTF/GLB model file
 - `assets/meshes/file.ply` — load a PLY point cloud
 - If a mesh file is missing, the engine silently falls back to a procedural cube
@@ -173,9 +177,14 @@ properties:
   roughness: 0.5            # 0.0 (smooth) to 1.0 (rough)
   metallic: 0.0             # 0.0 (dielectric) to 1.0 (metal)
   emission: [r, g, b]       # emissive color (0 = no glow)
+  albedo_map: assets/textures/brick.png    # optional texture (PNG/JPG/WEBP)
+  normal_map: assets/textures/brick_n.png  # optional normal map
 blend_mode: opaque           # opaque | transparent
 cull_mode: back              # back | front | none
 ```
+
+Textures are multiplied by base_color, so use `[1,1,1]` for unmodified texture appearance.
+All procedural meshes have UV coordinates for texture mapping.
 
 ## Lua Scripting API — COMPLETE REFERENCE
 
@@ -227,6 +236,39 @@ entity.set_metallic(id, value)
 -- Spawn new entity: entity.spawn(id, mesh, material, x, y, z, sx, sy, sz)
 entity.spawn("bullet_1", "procedural:sphere", "assets/materials/default.yaml", 0, 1, 0, 0.1, 0.1, 0.1)
 
+-- Spawn with physics and script: entity.spawn_ex(config)
+entity.spawn_ex({{
+    id = "crate_1",
+    mesh = "procedural:cube",
+    material = "assets/materials/wood.yaml",
+    position = {{0, 5, 0}},
+    scale = {{1, 1, 1}},
+    rigid_body = "dynamic",                -- "dynamic", "fixed", or "kinematic"
+    collider = {{
+        shape = "cuboid",                   -- "sphere", "cuboid", "capsule"
+        half_extents = {{0.5, 0.5, 0.5}},  -- for cuboid
+        -- radius = 0.5,                    -- for sphere/capsule
+        restitution = 0.3,
+        friction = 0.5,
+        is_trigger = false,
+    }},
+    script = "logic/crate.lua",            -- optional script attachment
+}})
+
+-- Swap texture at runtime: entity.set_texture(id, slot, path)
+entity.set_texture("ground", "albedo", "assets/textures/grass.png")
+entity.set_texture("wall", "normal", "assets/textures/brick_normal.png")
+
+-- Create runtime mesh from Lua: mesh.create(name, vertices, indices, uvs)
+mesh.create("my_terrain", {{
+    {{-5, 0, -5}}, {{5, 0, -5}}, {{5, 0, 5}}, {{-5, 0, 5}}
+}}, {{
+    0, 2, 1, 0, 3, 2
+}}, {{
+    {{0, 0}}, {{1, 0}}, {{1, 1}}, {{0, 1}}
+}})
+-- Then use: entity.spawn("ground", "runtime:my_terrain", "assets/materials/grass.yaml", 0,0,0, 1,1,1)
+
 -- Destroy entity (CAUTION: deferred to end-of-frame — see Important Notes below)
 entity.destroy(id)
 entity.destroy_by_prefix("bullet_")  -- bulk destroy all entities with matching prefix
@@ -259,6 +301,8 @@ input.pressed("action_name")       -- true while held down
 input.just_pressed("action_name")  -- true only on the frame pressed
 input.any_just_pressed()           -- true if ANY action pressed this frame
 local mx, my = input.mouse_delta() -- mouse movement since last frame
+local sx, sy = input.mouse_position() -- cursor position in screen pixels
+local dx, dy = input.scroll_delta() -- scroll wheel delta this frame
 ```
 
 ### UI API — `ui.*`
@@ -290,6 +334,11 @@ audio.stop_music(fade_out_secs)
 local sx, sy, visible = camera.world_to_screen(x, y, z)
 -- sx, sy = screen pixel coordinates
 -- visible = true if the point is in front of the camera and inside the viewport
+
+-- Unproject screen pixel to world ray (for mouse picking)
+local ox, oy, oz, dx, dy, dz = camera.screen_to_ray(sx, sy)
+-- ox,oy,oz = ray origin (near plane), dx,dy,dz = ray direction (normalized)
+-- Use with physics.hitscan(ox,oy,oz, dx,dy,dz, range) for click-to-select
 ```
 
 Camera mode is set in the scene YAML on the camera component:

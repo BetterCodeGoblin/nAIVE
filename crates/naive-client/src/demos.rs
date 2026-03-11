@@ -81,6 +81,12 @@ static MATERIALS: &[(&str, &str)] = &[
     ("pbr_M4_R0.yaml", include_str!("../../../project/assets/materials/pbr_M4_R0.yaml")),
     ("pbr_M4_R2.yaml", include_str!("../../../project/assets/materials/pbr_M4_R2.yaml")),
     ("pbr_M4_R4.yaml", include_str!("../../../project/assets/materials/pbr_M4_R4.yaml")),
+    // Textured materials
+    ("grass_tex.yaml", include_str!("../../../project/assets/materials/grass_tex.yaml")),
+    ("stone_tex.yaml", include_str!("../../../project/assets/materials/stone_tex.yaml")),
+    ("wood_tex.yaml", include_str!("../../../project/assets/materials/wood_tex.yaml")),
+    ("water_tex.yaml", include_str!("../../../project/assets/materials/water_tex.yaml")),
+    ("snow_tex.yaml", include_str!("../../../project/assets/materials/snow_tex.yaml")),
 ];
 
 // ---------------------------------------------------------------------------
@@ -98,6 +104,8 @@ struct DemoEntry {
     scripts: &'static [(&'static str, &'static str)],
     /// Binary assets (GLB meshes, etc.) to extract into assets/meshes/
     mesh_assets: &'static [(&'static str, &'static [u8])],
+    /// Texture image assets to extract into assets/textures/
+    texture_assets: &'static [(&'static str, &'static [u8])],
 }
 
 static DEMOS: &[DemoEntry] = &[
@@ -114,6 +122,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier25_impulse_demo.lua", include_str!("../../../project/logic/tier25_impulse_demo.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 2,
@@ -127,6 +136,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier25_ccd_demo.lua", include_str!("../../../project/logic/tier25_ccd_demo.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 3,
@@ -140,6 +150,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier25_materials_demo.lua", include_str!("../../../project/logic/tier25_materials_demo.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     // -- Combat --
     DemoEntry {
@@ -155,6 +166,7 @@ static DEMOS: &[DemoEntry] = &[
             ("combat_enemy.lua", include_str!("../../../project/logic/combat_enemy.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 5,
@@ -169,6 +181,7 @@ static DEMOS: &[DemoEntry] = &[
             ("combat_enemy.lua", include_str!("../../../project/logic/combat_enemy.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     // -- Visual --
     DemoEntry {
@@ -183,6 +196,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier2_particle_camera.lua", include_str!("../../../project/logic/tier2_particle_camera.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 7,
@@ -196,6 +210,7 @@ static DEMOS: &[DemoEntry] = &[
             ("ball_collision.lua", include_str!("../../../project/logic/ball_collision.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 8,
@@ -209,6 +224,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier25_shake_demo.lua", include_str!("../../../project/logic/tier25_shake_demo.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     // -- UI --
     DemoEntry {
@@ -224,6 +240,7 @@ static DEMOS: &[DemoEntry] = &[
             ("ui_demo_camera.lua", include_str!("../../../project/logic/ui_demo_camera.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     // -- Worlds --
     DemoEntry {
@@ -245,6 +262,7 @@ static DEMOS: &[DemoEntry] = &[
             ("genesis_sunrise.lua", include_str!("../../../project/logic/genesis_sunrise.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 11,
@@ -263,6 +281,7 @@ static DEMOS: &[DemoEntry] = &[
             ("neon_pulse.lua", include_str!("../../../project/logic/neon_pulse.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 12,
@@ -282,6 +301,7 @@ static DEMOS: &[DemoEntry] = &[
             ("neon_pulse.lua", include_str!("../../../project/logic/neon_pulse.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     // -- Stress Test --
     DemoEntry {
@@ -297,6 +317,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier2_stress_spawner.lua", include_str!("../../../project/logic/tier2_stress_spawner.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 14,
@@ -311,6 +332,7 @@ static DEMOS: &[DemoEntry] = &[
             ("tier2_pickup_bob.lua", include_str!("../../../project/logic/tier2_pickup_bob.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     // -- Visual (Gaussian Splatting) --
     DemoEntry {
@@ -326,6 +348,7 @@ static DEMOS: &[DemoEntry] = &[
             ("float_bob.lua", include_str!("../../../project/logic/float_bob.lua")),
         ],
         mesh_assets: &[],
+        texture_assets: &[],
     },
     // -- AI --
     DemoEntry {
@@ -342,6 +365,7 @@ static DEMOS: &[DemoEntry] = &[
         mesh_assets: &[
             ("meshy_car.glb", include_bytes!("../../../project/assets/meshes/meshy_car.glb")),
         ],
+        texture_assets: &[],
     },
     DemoEntry {
         number: 17,
@@ -356,6 +380,43 @@ static DEMOS: &[DemoEntry] = &[
         ],
         mesh_assets: &[
             ("submarine.glb", include_bytes!("../../../project/assets/meshes/submarine.glb")),
+        ],
+        texture_assets: &[],
+    },
+    // -- Tier 3: Visual & Interaction --
+    DemoEntry {
+        number: 18,
+        slug: "tier3",
+        name: "Visual & Interaction",
+        description: "Procedural meshes, mouse picking, spawn_ex, mesh.create",
+        category: "Visual",
+        scene_filename: "tier3_showcase.yaml",
+        scene_content: include_str!("../../../project/scenes/tier3_showcase.yaml"),
+        scripts: &[
+            ("tier3_showcase.lua", include_str!("../../../project/logic/tier3_showcase.lua")),
+        ],
+        mesh_assets: &[],
+        texture_assets: &[],
+    },
+    DemoEntry {
+        number: 19,
+        slug: "procworld",
+        name: "Procedural World",
+        description: "Textured procedural world — terrain, trees, village, towers, lake, bridge",
+        category: "Worlds",
+        scene_filename: "procedural_world.yaml",
+        scene_content: include_str!("../../../project/scenes/procedural_world.yaml"),
+        scripts: &[
+            ("procedural_world.lua", include_str!("../../../project/logic/procedural_world.lua")),
+            ("fly_camera.lua", include_str!("../../../project/logic/fly_camera.lua")),
+        ],
+        mesh_assets: &[],
+        texture_assets: &[
+            ("grass.png", include_bytes!("../../../project/assets/textures/grass.png")),
+            ("stone.png", include_bytes!("../../../project/assets/textures/stone.png")),
+            ("wood.png", include_bytes!("../../../project/assets/textures/wood.png")),
+            ("water.png", include_bytes!("../../../project/assets/textures/water.png")),
+            ("snow.png", include_bytes!("../../../project/assets/textures/snow.png")),
         ],
     },
 ];
@@ -522,6 +583,11 @@ fn extract_demo(demo: &DemoEntry) -> PathBuf {
         write_binary(&temp_root.join(format!("assets/meshes/{}", filename)), data);
     }
 
+    // Texture image assets
+    for (filename, data) in demo.texture_assets {
+        write_binary(&temp_root.join(format!("assets/textures/{}", filename)), data);
+    }
+
     temp_root
 }
 
@@ -532,6 +598,7 @@ fn create_dirs(root: &Path) {
         "logic",
         "assets/materials",
         "assets/meshes",
+        "assets/textures",
         "pipelines",
         "input",
     ];

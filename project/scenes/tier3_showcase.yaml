@@ -1,0 +1,199 @@
+name: "Tier 3 — Visual & Interaction Showcase"
+settings:
+  ambient_light: [0.12, 0.12, 0.15]
+  gravity: [0, -9.81, 0]
+
+entities:
+  # === Player (FPS Camera) ===
+  - id: player
+    components:
+      transform:
+        position: [0, 4, 18]
+      camera:
+        fov: 50
+        near: 0.1
+        far: 200
+      character_controller:
+        move_speed: 5.0
+        sprint_multiplier: 1.8
+        jump_impulse: 7.0
+        step_height: 0.3
+        height: 1.8
+        radius: 0.4
+
+  # === Ground plane ===
+  - id: floor
+    components:
+      transform:
+        position: [0, -0.1, 0]
+        scale: [40, 0.2, 40]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/dark_floor.yaml
+      collider:
+        shape: box
+        half_extents: [20, 0.1, 20]
+        friction: 0.6
+
+  # === Showcase controller (Lua script does everything) ===
+  - id: showcase
+    components:
+      transform:
+        position: [0, 0, 0]
+      script:
+        source: logic/tier3_showcase.lua
+
+  # === Procedural Mesh Gallery (static display) ===
+  # Row of all 6 procedural shapes on pedestals
+  - id: pedestal_cube
+    components:
+      transform:
+        position: [-10, 0.5, 0]
+        scale: [1.5, 1.0, 1.5]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/pbr_M0_R2.yaml
+      collider:
+        shape: box
+        half_extents: [0.75, 0.5, 0.75]
+
+  - id: shape_cube
+    components:
+      transform:
+        position: [-10, 2, 0]
+        scale: [1.2, 1.2, 1.2]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/pbr_M4_R0.yaml
+
+  - id: pedestal_sphere
+    components:
+      transform:
+        position: [-6, 0.5, 0]
+        scale: [1.5, 1.0, 1.5]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/pbr_M0_R2.yaml
+      collider:
+        shape: box
+        half_extents: [0.75, 0.5, 0.75]
+
+  - id: shape_sphere
+    components:
+      transform:
+        position: [-6, 2.2, 0]
+      mesh_renderer:
+        mesh: procedural:sphere
+        material: assets/materials/pbr_M3_R1.yaml
+
+  - id: pedestal_plane
+    components:
+      transform:
+        position: [-2, 0.5, 0]
+        scale: [1.5, 1.0, 1.5]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/pbr_M0_R2.yaml
+      collider:
+        shape: box
+        half_extents: [0.75, 0.5, 0.75]
+
+  - id: shape_plane
+    components:
+      transform:
+        position: [-2, 2, 0]
+        rotation: [30, 0, 0]
+      mesh_renderer:
+        mesh: procedural:plane
+        material: assets/materials/pbr_M2_R3.yaml
+
+  - id: pedestal_cylinder
+    components:
+      transform:
+        position: [2, 0.5, 0]
+        scale: [1.5, 1.0, 1.5]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/pbr_M0_R2.yaml
+      collider:
+        shape: box
+        half_extents: [0.75, 0.5, 0.75]
+
+  - id: shape_cylinder
+    components:
+      transform:
+        position: [2, 2.2, 0]
+        scale: [0.8, 0.8, 0.8]
+      mesh_renderer:
+        mesh: procedural:cylinder
+        material: assets/materials/pbr_M1_R1.yaml
+
+  - id: pedestal_cone
+    components:
+      transform:
+        position: [6, 0.5, 0]
+        scale: [1.5, 1.0, 1.5]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/pbr_M0_R2.yaml
+      collider:
+        shape: box
+        half_extents: [0.75, 0.5, 0.75]
+
+  - id: shape_cone
+    components:
+      transform:
+        position: [6, 2.2, 0]
+        scale: [0.8, 0.8, 0.8]
+      mesh_renderer:
+        mesh: procedural:cone
+        material: assets/materials/pbr_M4_R2.yaml
+
+  - id: pedestal_torus
+    components:
+      transform:
+        position: [10, 0.5, 0]
+        scale: [1.5, 1.0, 1.5]
+      mesh_renderer:
+        mesh: procedural:cube
+        material: assets/materials/pbr_M0_R2.yaml
+      collider:
+        shape: box
+        half_extents: [0.75, 0.5, 0.75]
+
+  - id: shape_torus
+    components:
+      transform:
+        position: [10, 2.2, 0]
+        scale: [0.8, 0.8, 0.8]
+      mesh_renderer:
+        mesh: procedural:torus
+        material: assets/materials/pbr_M3_R3.yaml
+
+  # === Lighting ===
+  - id: key_light
+    components:
+      transform:
+        position: [10, 15, 10]
+      point_light:
+        color: [1.0, 0.95, 0.9]
+        intensity: 200.0
+        range: 50.0
+
+  - id: fill_light
+    components:
+      transform:
+        position: [-8, 8, -6]
+      point_light:
+        color: [0.5, 0.6, 1.0]
+        intensity: 80.0
+        range: 35.0
+
+  - id: back_light
+    components:
+      transform:
+        position: [0, 10, -12]
+      point_light:
+        color: [1.0, 0.8, 0.6]
+        intensity: 60.0
+        range: 30.0

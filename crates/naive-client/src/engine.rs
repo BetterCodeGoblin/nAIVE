@@ -15,7 +15,7 @@ use crate::audio::AudioSystem;
 use crate::camera::CameraState;
 use crate::cli::CliArgs;
 use crate::command::CommandServer;
-use crate::components::{Camera, CameraMode, CameraRole, CollisionDamage, GaussianSplat, Health, Player, Projectile, Transform};
+use crate::components::{Camera, CameraMode, CameraRole, CollisionDamage, GaussianSplat, Health, MeshRenderer, Player, Projectile, Transform};
 use crate::editor_camera::EditorCamera;
 use crate::events::EventBus;
 use crate::font::BitmapFont;
@@ -24,7 +24,7 @@ use crate::ui::UiRenderer;
 use crate::input::InputState;
 use crate::material::MaterialCache;
 use crate::mesh::MeshCache;
-use crate::physics::{CharacterController, Collider as ColliderComp, PhysicsWorld, RigidBody as RigidBodyComp};
+use crate::physics::{CharacterController, Collider as ColliderComp, PhysicsBodyType, PhysicsShape, PhysicsWorld, RigidBody as RigidBodyComp};
 use crate::scripting::{CameraShakeState, Script, ScriptRuntime};
 use crate::pipeline::CompiledPipeline;
 use crate::splat::SplatCache;
@@ -116,6 +116,9 @@ pub struct Engine {
     // Texture resources for GLB albedo textures
     pub texture_resources: Option<crate::mesh::TextureResources>,
 
+    // Texture cache for material-level textures (albedo_map, normal_map)
+    pub texture_cache: crate::texture_cache::TextureCache,
+
     // Skeletal animation system
     pub animation_system: crate::anim_system::AnimationSystem,
     /// Per-entity bone matrix palettes computed this frame (entity -> palette).
@@ -173,6 +176,7 @@ impl Engine {
             editor_scene_path: None,
             shared_surface_config: None,
             texture_resources: None,
+            texture_cache: crate::texture_cache::TextureCache::new(),
             animation_system: crate::anim_system::AnimationSystem::new(),
             bone_palettes: HashMap::new(),
         }
@@ -269,6 +273,7 @@ impl Engine {
             &mut self.splat_cache,
             None,
             Some(&tex_res),
+            Some(&mut self.texture_cache),
         );
 
         self.texture_resources = Some(tex_res);
@@ -534,6 +539,9 @@ impl Engine {
             if let Err(e) = script_runtime.register_animation_api(sw.clone()) {
                 tracing::error!("Failed to register animation API: {}", e);
             }
+            if let Err(e) = script_runtime.register_mesh_api(self.entity_commands.clone()) {
+                tracing::error!("Failed to register mesh API: {}", e);
+            }
         }
 
         // Load scripts for entities that have them
@@ -685,6 +693,7 @@ impl Engine {
             &mut self.splat_cache,
             None,
             Some(&tex_res),
+            Some(&mut self.texture_cache),
         );
 
         self.texture_resources = Some(tex_res);
@@ -870,6 +879,9 @@ impl Engine {
         if let Some(sw) = &self.scene_world {
             if let Err(e) = script_runtime.register_animation_api(sw.clone()) {
                 tracing::error!("Failed to register animation API: {}", e);
+            }
+            if let Err(e) = script_runtime.register_mesh_api(self.entity_commands.clone()) {
+                tracing::error!("Failed to register mesh API: {}", e);
             }
         }
 
@@ -1808,10 +1820,10 @@ let mut scene_world = scene_world.borrow_mut();
 
         // Process spawns (after destroys, so destroy+spawn same ID works)
         let spawns: Vec<_> = self.entity_commands.borrow_mut().spawns.drain(..).collect();
-        for cmd in spawns {
+        for cmd in &spawns {
             if let Some(scene_world) = &self.scene_world {
                 let mut scene_world = scene_world.borrow_mut();
-                crate::world::spawn_runtime_entity(
+                let ok = crate::world::spawn_runtime_entity(
                     &mut *scene_world,
                     &cmd.id,
                     &cmd.mesh,
@@ -1825,6 +1837,76 @@ let mut scene_world = scene_world.borrow_mut();
                     &mut self.material_cache,
                     self.texture_resources.as_ref(),
                 );
+
+                // Attach collider + rigid body if specified
+                if ok {
+                    if let Some(&entity) = scene_world.entity_registry.get(&cmd.id) {
+                        let position = glam::Vec3::from(cmd.position);
+                        let rotation = glam::Quat::IDENTITY;
+
+                        // Build collider shape
+                        let shape = if let Some(col) = &cmd.collider {
+                            match col.shape.as_str() {
+                                "cuboid" | "box" => {
+                                    let he = col.half_extents.unwrap_or([0.5, 0.5, 0.5]);
+                                    PhysicsShape::Box { half_extents: glam::Vec3::from(he) }
+                                }
+                                "capsule" => {
+                                    let r = col.radius.unwrap_or(0.5);
+                                    let he = col.half_extents.unwrap_or([0.5, 1.0, 0.5]);
+                                    PhysicsShape::Capsule { radius: r, half_height: he[1] }
+                                }
+                                _ => {
+                                    let r = col.radius.unwrap_or(0.5);
+                                    PhysicsShape::Sphere { radius: r }
+                                }
+                            }
+                        } else {
+                            let r = cmd.scale[0].max(cmd.scale[1]).max(cmd.scale[2]) * 0.5;
+                            PhysicsShape::Sphere { radius: r }
+                        };
+
+                        let is_trigger = cmd.collider.as_ref().map(|c| c.is_trigger).unwrap_or(false);
+                        let restitution = cmd.collider.as_ref().map(|c| c.restitution).unwrap_or(0.3);
+                        let friction = cmd.collider.as_ref().map(|c| c.friction).unwrap_or(0.5);
+
+                        if let (Some(rb_type), Some(physics_world)) = (&cmd.rigid_body, &self.physics_world) {
+                            let mut pw = physics_world.borrow_mut();
+                            let (rb_handle, col_handle, pbt) = match rb_type.as_str() {
+                                "dynamic" => {
+                                    let (r, c) = pw.add_dynamic_body(entity, position, rotation, shape.clone(), 1.0, restitution, friction, false);
+                                    (r, c, PhysicsBodyType::Dynamic)
+                                }
+                                "kinematic" => {
+                                    let (r, c) = pw.add_kinematic_body(entity, position, rotation, shape.clone(), is_trigger, restitution, friction);
+                                    (r, c, PhysicsBodyType::Kinematic)
+                                }
+                                _ => {
+                                    let (r, c) = pw.add_static_body(entity, position, rotation, shape.clone(), is_trigger, restitution, friction);
+                                    (r, c, PhysicsBodyType::Static)
+                                }
+                            };
+                            let _ = scene_world.world.insert_one(entity, RigidBodyComp { handle: rb_handle, body_type: pbt });
+                            let _ = scene_world.world.insert_one(entity, ColliderComp { handle: col_handle, shape, is_trigger });
+                        } else if cmd.collider.is_some() {
+                            // Collider without rigid_body type: default to fixed
+                            if let Some(physics_world) = &self.physics_world {
+                                let mut pw = physics_world.borrow_mut();
+                                let (rb_handle, col_handle) = pw.add_static_body(entity, position, rotation, shape.clone(), is_trigger, restitution, friction);
+                                let _ = scene_world.world.insert_one(entity, RigidBodyComp { handle: rb_handle, body_type: PhysicsBodyType::Static });
+                                let _ = scene_world.world.insert_one(entity, ColliderComp { handle: col_handle, shape, is_trigger });
+                            }
+                        }
+
+                        // Attach script if specified
+                        if let Some(script_path) = &cmd.script {
+                            let _ = scene_world.world.insert_one(entity, Script {
+                                source: std::path::PathBuf::from(script_path),
+                                initialized: false,
+                            });
+                        }
+                    }
+                }
             }
         }
 
@@ -1918,6 +2000,53 @@ let mut scene_world = scene_world.borrow_mut();
                 }
             }
         }
+
+        // Process texture swaps
+        let tex_swaps: Vec<_> = self.entity_commands.borrow_mut().texture_swaps.drain(..).collect();
+        if !tex_swaps.is_empty() {
+            if let Some(tex_res) = &self.texture_resources {
+                let layout = &tex_res.bind_group_layout;
+                for swap in tex_swaps {
+                    match self.texture_cache.get_or_load(&gpu.device, &gpu.queue, layout, &self.project_root, &swap.texture_path) {
+                        Ok(tex_handle) => {
+                            if let Some(scene_world) = &self.scene_world {
+                                let sw = scene_world.borrow();
+                                if let Some(&entity) = sw.entity_registry.get(&swap.entity_id) {
+                                    if let Ok(mr) = sw.world.get::<&MeshRenderer>(entity) {
+                                        let mat = self.material_cache.get_mut(mr.material_handle);
+                                        match swap.slot.as_str() {
+                                            "albedo" => mat.albedo_texture = Some(tex_handle),
+                                            "normal" => mat.normal_texture = Some(tex_handle),
+                                            _ => tracing::warn!("entity.set_texture: unknown slot '{}'", swap.slot),
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Err(e) => tracing::warn!("entity.set_texture: failed to load '{}': {}", swap.texture_path, e),
+                    }
+                }
+            }
+        }
+
+        // Process runtime mesh creates
+        let mesh_creates: Vec<_> = self.entity_commands.borrow_mut().mesh_creates.drain(..).collect();
+        for cmd in mesh_creates {
+            self.mesh_cache.insert_runtime_mesh(
+                &gpu.device,
+                &cmd.name,
+                &cmd.positions,
+                &cmd.normals,
+                &cmd.uvs,
+                &cmd.indices,
+            );
+        }
+
+        // Process spawn commands that have colliders/scripts
+        // (already handled by spawn_runtime_entity above, but we need to attach
+        // colliders and scripts post-spawn for the commands that specified them)
+        // Note: this is done as a second pass since spawn_runtime_entity doesn't
+        // support these yet — we attach them after the entity exists.
     }
 
     /// Process a pending scene load (deferred from Lua `scene.load(path)`).
@@ -2001,6 +2130,7 @@ let mut scene_world = scene_world.borrow_mut();
                 &mut self.splat_cache,
                 None,
                 self.texture_resources.as_ref(),
+                Some(&mut self.texture_cache),
             );
         }
 
@@ -3391,6 +3521,7 @@ impl ApplicationHandler for Engine {
                                     &self.render_debug,
                                     self.texture_resources.as_ref(),
                                     &self.bone_palettes,
+                                    Some(&self.texture_cache),
                                 );
                                 gpu.queue.submit(std::iter::once(encoder.finish()));
                             }

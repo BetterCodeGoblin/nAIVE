@@ -50,6 +50,7 @@ hecs = { workspace = true }
 gltf = { workspace = true }
 image = { workspace = true }
 ply-rs = { workspace = true }
+stl_io = { workspace = true }
 linked-hash-map = { workspace = true }
 
 # Physics

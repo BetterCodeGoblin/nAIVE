@@ -10,7 +10,7 @@ AI-native game engine — create worlds with YAML, Lua, and natural language.
 - **Scripting:** Lua 5.4 (mlua)
 - **ECS:** hecs
 - **Audio:** kira
-- **Current version:** 0.1.11
+- **Current version:** 0.1.18
 
 ## Workspace Crates
 
@@ -35,6 +35,7 @@ AI-native game engine — create worlds with YAML, Lua, and natural language.
 | `crates/naive-client/src/dev_log.rs` | `naive submit-log` — POST dev.log as GitHub Issue |
 | `crates/naive-client/src/demos.rs` | `naive demo` — 16 embedded demos with interactive browser |
 | `crates/naive-client/src/editor_camera.rs` | Free fly camera for `naive edit` editor mode |
+| `crates/naive-client/src/texture_cache.rs` | TextureCache — loads PNG/JPG/WEBP textures, creates wgpu bind groups |
 
 ## Architecture Patterns
 
@@ -51,8 +52,9 @@ AI-native game engine — create worlds with YAML, Lua, and natural language.
 | Tier 2 | Production Foundations (dynamic instance buffer, entity lifecycle, pooling, particles, events) | **DONE v0.1.4** |
 | Tier 2.5 | Physics & Scene API (impulse/force, velocity, CCD, collider materials, entity tags, camera shake, scene loading) | **DONE v0.1.7** |
 | Tier 2.7 | DX & Code Quality (physics hot-reload, component patch coverage, pipeline modularization, HUD reload notifications, debug wireframes, kinematic bodies, convex decomposition) | **DONE v0.1.15** |
-| Tier 3 | GPU Scale (50K+ GPU compute entities, neighbor-grid collisions, flow field) | Planned |
-| Tier 4 | Animation & Polish (skeletal animation, VAT, UI) | Planned |
+| Tier 3 | Visual & Interaction (texture mapping, procedural meshes, mouse picking, screen_to_ray) | **IN PROGRESS v0.1.18** |
+| Tier 4 | GPU Scale (50K+ GPU compute entities, neighbor-grid collisions, flow field) | Planned |
+| Tier 5 | Animation & Polish (skeletal animation, VAT, UI) | Planned |
 
 ## AI Asset Generation
 
@@ -128,7 +130,13 @@ When the editor is running, Claude Code can use these MCP tools via `naive_mcp`:
 
 Available via `mesh_renderer.mesh`:
 - `procedural:cube` — Unit cube
-- `procedural:sphere` — Unit sphere (32x32 segments)
+- `procedural:sphere` — UV sphere (32x32 segments)
+- `procedural:plane` — XZ plane (1x1)
+- `procedural:cylinder` — Y-axis cylinder (radius 0.5, height 1.0)
+- `procedural:cone` — Y-axis cone (radius 0.5, height 1.0)
+- `procedural:torus` — Torus/donut (major 0.3, minor 0.1)
+
+All procedural meshes include UV coordinates for texture mapping.
 
 ### Procedural Materials
 

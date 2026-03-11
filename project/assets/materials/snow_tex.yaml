@@ -1,0 +1,6 @@
+shader: pbr
+properties:
+  base_color: [0.95, 0.95, 1.0]
+  roughness: 0.6
+  metallic: 0.0
+  albedo_map: assets/textures/snow.png

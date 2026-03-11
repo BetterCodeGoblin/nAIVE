@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use crate::components::MaterialHandle;
+use crate::texture_cache::{TextureCache, TextureHandle};
 
 #[derive(Debug)]
 pub enum MaterialError {
@@ -102,6 +103,10 @@ impl MaterialUniform {
 /// A loaded GPU material.
 pub struct GpuMaterial {
     pub uniform: MaterialUniform,
+    /// Albedo texture loaded from material's `albedo_map` field.
+    pub albedo_texture: Option<TextureHandle>,
+    /// Normal map loaded from material's `normal_map` field.
+    pub normal_texture: Option<TextureHandle>,
 }
 
 /// Cache of loaded materials.
@@ -122,9 +127,12 @@ impl MaterialCache {
 
     pub fn get_or_load(
         &mut self,
-        _device: &wgpu::Device,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
         project_root: &Path,
         material_path: &str,
+        mut texture_cache: Option<&mut TextureCache>,
+        texture_layout: Option<&wgpu::BindGroupLayout>,
     ) -> Result<MaterialHandle, MaterialError> {
         let key = PathBuf::from(material_path);
         if let Some(&handle) = self.path_to_handle.get(&key) {
@@ -156,7 +164,43 @@ impl MaterialCache {
             uniform.base_color[0], uniform.base_color[1], uniform.base_color[2], uniform.base_color[3],
             uniform.roughness
         );
-        let gpu_material = GpuMaterial { uniform };
+
+        // Load textures if referenced
+        let albedo_texture = if let (Some(albedo_path), Some(tex_cache), Some(tex_layout)) =
+            (&mat_file.properties.albedo_map, texture_cache.as_deref_mut(), texture_layout)
+        {
+            match tex_cache.get_or_load(device, queue, tex_layout, project_root, albedo_path) {
+                Ok(handle) => {
+                    tracing::info!("Material '{}' loaded albedo_map: {}", material_path, albedo_path);
+                    Some(handle)
+                }
+                Err(e) => {
+                    tracing::warn!("Material '{}' failed to load albedo_map '{}': {}", material_path, albedo_path, e);
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        let normal_texture = if let (Some(normal_path), Some(tex_cache), Some(tex_layout)) =
+            (&mat_file.properties.normal_map, texture_cache, texture_layout)
+        {
+            match tex_cache.get_or_load(device, queue, tex_layout, project_root, normal_path) {
+                Ok(handle) => {
+                    tracing::info!("Material '{}' loaded normal_map: {}", material_path, normal_path);
+                    Some(handle)
+                }
+                Err(e) => {
+                    tracing::warn!("Material '{}' failed to load normal_map '{}': {}", material_path, normal_path, e);
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        let gpu_material = GpuMaterial { uniform, albedo_texture, normal_texture };
 
         let handle = MaterialHandle(self.materials.len());
         self.materials.push(gpu_material);
@@ -167,6 +211,10 @@ impl MaterialCache {
 
     pub fn get(&self, handle: MaterialHandle) -> &GpuMaterial {
         &self.materials[handle.0]
+    }
+
+    pub fn get_mut(&mut self, handle: MaterialHandle) -> &mut GpuMaterial {
+        &mut self.materials[handle.0]
     }
 
     /// Get the path/name for a material handle (reverse lookup for serialization).
@@ -180,17 +228,17 @@ impl MaterialCache {
     }
 
     #[allow(dead_code)]
-    pub fn ensure_default(&mut self, device: &wgpu::Device, project_root: &Path) -> MaterialHandle {
+    pub fn ensure_default(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, project_root: &Path) -> MaterialHandle {
         if let Some(handle) = self.default_handle {
             return handle;
         }
         let handle = self
-            .get_or_load(device, project_root, "assets/materials/default.yaml")
+            .get_or_load(device, queue, project_root, "assets/materials/default.yaml", None, None)
             .unwrap_or_else(|_| {
                 // Create a hardcoded default
                 let uniform = MaterialUniform::from_properties(&MaterialProperties::default());
                 let h = MaterialHandle(self.materials.len());
-                self.materials.push(GpuMaterial { uniform });
+                self.materials.push(GpuMaterial { uniform, albedo_texture: None, normal_texture: None });
                 h
             });
         self.default_handle = Some(handle);
