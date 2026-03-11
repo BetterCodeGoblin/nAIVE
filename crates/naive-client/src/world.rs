@@ -28,6 +28,24 @@ pub struct EntityCommandQueue {
     pub dynamic_counter: u64,
     pub pool_ops: Vec<PoolOp>,
     pub pending_scene_load: Option<String>,
+    pub texture_swaps: Vec<TextureSwapCommand>,
+    pub mesh_creates: Vec<MeshCreateCommand>,
+}
+
+/// Deferred texture swap: change an entity's albedo or normal map at runtime.
+pub struct TextureSwapCommand {
+    pub entity_id: String,
+    pub slot: String,
+    pub texture_path: String,
+}
+
+/// Deferred mesh creation from Lua vertex/index data.
+pub struct MeshCreateCommand {
+    pub name: String,
+    pub positions: Vec<[f32; 3]>,
+    pub normals: Vec<[f32; 3]>,
+    pub uvs: Vec<[f32; 2]>,
+    pub indices: Vec<u32>,
 }
 
 pub struct SpawnCommand {
@@ -36,6 +54,19 @@ pub struct SpawnCommand {
     pub material: String,
     pub position: [f32; 3],
     pub scale: [f32; 3],
+    pub collider: Option<SpawnColliderSpec>,
+    pub rigid_body: Option<String>,
+    pub script: Option<String>,
+}
+
+/// Collider specification for runtime-spawned entities.
+pub struct SpawnColliderSpec {
+    pub shape: String,
+    pub half_extents: Option<[f32; 3]>,
+    pub radius: Option<f32>,
+    pub is_trigger: bool,
+    pub restitution: f32,
+    pub friction: f32,
 }
 
 pub struct ProjectileSpawnCommand {
@@ -80,6 +111,8 @@ impl EntityCommandQueue {
         self.dynamic_spawns.clear();
         self.pool_ops.clear();
         self.pending_scene_load = None;
+        self.texture_swaps.clear();
+        self.mesh_creates.clear();
     }
 }
 
@@ -111,7 +144,7 @@ pub fn spawn_runtime_entity(
             return false;
         }
     };
-    let material_handle = match material_cache.get_or_load(device, project_root, material) {
+    let material_handle = match material_cache.get_or_load(device, queue, project_root, material, None, None) {
         Ok(h) => h,
         Err(e) => {
             tracing::error!("spawn_runtime_entity: material '{}' failed: {}", material, e);
@@ -180,13 +213,16 @@ pub fn spawn_all_entities(
     splat_cache: &mut SplatCache,
     physics_world: Option<&mut PhysicsWorld>,
     texture_resources: Option<&crate::mesh::TextureResources>,
+    texture_cache: Option<&mut crate::texture_cache::TextureCache>,
 ) {
     let pw_ptr = physics_world.map(|pw| pw as *mut PhysicsWorld);
+    let tc_ptr = texture_cache.map(|tc| tc as *mut crate::texture_cache::TextureCache);
     for entity_def in &scene.entities {
-        // SAFETY: we need to reborrow the physics world for each entity spawn since
-        // Option<&mut T> is not Copy. The reference is valid for the entire loop.
+        // SAFETY: we need to reborrow the physics world and texture cache for each entity spawn since
+        // Option<&mut T> is not Copy. The references are valid for the entire loop.
         let pw_ref = pw_ptr.map(|ptr| unsafe { &mut *ptr });
-        spawn_entity(scene_world, entity_def, device, queue, project_root, mesh_cache, material_cache, splat_cache, pw_ref, texture_resources);
+        let tc_ref = tc_ptr.map(|ptr| unsafe { &mut *ptr });
+        spawn_entity(scene_world, entity_def, device, queue, project_root, mesh_cache, material_cache, splat_cache, pw_ref, texture_resources, tc_ref);
     }
     scene_world.current_scene = Some(scene.clone());
     tracing::info!(
@@ -209,6 +245,7 @@ fn spawn_entity(
     splat_cache: &mut SplatCache,
     physics_world: Option<&mut PhysicsWorld>,
     texture_resources: Option<&crate::mesh::TextureResources>,
+    texture_cache: Option<&mut crate::texture_cache::TextureCache>,
 ) {
     let entity_id = EntityId(entity_def.id.clone());
     let tags = Tags(entity_def.tags.clone());
@@ -252,7 +289,8 @@ fn spawn_entity(
                 return;
             }
         };
-        let material_handle = match material_cache.get_or_load(device, project_root, &mr.material) {
+        let tex_layout = texture_resources.map(|tr| &tr.bind_group_layout);
+        let material_handle = match material_cache.get_or_load(device, queue, project_root, &mr.material, texture_cache, tex_layout) {
             Ok(h) => h,
             Err(e) => {
                 tracing::error!("Failed to load material '{}' for entity '{}': {}", mr.material, entity_def.id, e);
@@ -558,7 +596,7 @@ pub fn spawn_projectile_entity(
             return false;
         }
     };
-    let material_handle = match material_cache.get_or_load(device, project_root, &cmd.material) {
+    let material_handle = match material_cache.get_or_load(device, queue, project_root, &cmd.material, None, None) {
         Ok(h) => h,
         Err(e) => {
             tracing::error!("spawn_projectile_entity: material '{}' failed: {}", cmd.material, e);
@@ -657,7 +695,7 @@ pub fn spawn_dynamic_entity(
             return false;
         }
     };
-    let material_handle = match material_cache.get_or_load(device, project_root, &cmd.material) {
+    let material_handle = match material_cache.get_or_load(device, queue, project_root, &cmd.material, None, None) {
         Ok(h) => h,
         Err(e) => {
             tracing::error!("spawn_dynamic_entity: material '{}' failed: {}", cmd.material, e);
@@ -965,7 +1003,7 @@ pub fn reconcile_scene(
     let old_scene = match &scene_world.current_scene {
         Some(s) => s.clone(),
         None => {
-            spawn_all_entities(scene_world, new_scene, device, queue, project_root, mesh_cache, material_cache, splat_cache, physics_world, texture_resources);
+            spawn_all_entities(scene_world, new_scene, device, queue, project_root, mesh_cache, material_cache, splat_cache, physics_world, texture_resources, None);
             return;
         }
     };
@@ -994,7 +1032,7 @@ pub fn reconcile_scene(
     for entity_def in &new_scene.entities {
         if !old_ids.contains(entity_def.id.as_str()) {
             let pw_ref = pw_ptr.map(|ptr| unsafe { &mut *ptr });
-            spawn_entity(scene_world, entity_def, device, queue, project_root, mesh_cache, material_cache, splat_cache, pw_ref, texture_resources);
+            spawn_entity(scene_world, entity_def, device, queue, project_root, mesh_cache, material_cache, splat_cache, pw_ref, texture_resources, None);
             tracing::info!("Hot-reload: spawned entity '{}'", entity_def.id);
         }
     }
@@ -1035,7 +1073,7 @@ pub fn reconcile_scene(
             let _ = scene_world.world.despawn(entity);
         }
         if let Some(new_def) = new_scene.entities.iter().find(|e| &e.id == id) {
-            spawn_entity(scene_world, new_def, device, queue, project_root, mesh_cache, material_cache, splat_cache, physics_world.as_deref_mut(), texture_resources);
+            spawn_entity(scene_world, new_def, device, queue, project_root, mesh_cache, material_cache, splat_cache, physics_world.as_deref_mut(), texture_resources, None);
 
             tracing::info!("Hot-reload: respawned entity '{}' (structural change)", id);
         }
@@ -1110,7 +1148,7 @@ fn patch_entity(
                 None
             };
             let material_handle = if old_mr.material != new_mr.material {
-                material_cache.get_or_load(device, project_root, &new_mr.material).ok()
+                material_cache.get_or_load(device, queue, project_root, &new_mr.material, None, None).ok()
             } else {
                 None
             };

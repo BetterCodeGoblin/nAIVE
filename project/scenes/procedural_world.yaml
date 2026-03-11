@@ -1,0 +1,56 @@
+name: "Procedural World — Generated Entirely from Code"
+settings:
+  ambient_light: [0.18, 0.22, 0.28]
+  gravity: [0, -9.81, 0]
+
+entities:
+  # === Player (free-fly camera) ===
+  - id: player
+    components:
+      transform:
+        position: [0, 20, 45]
+      camera:
+        fov: 55
+        near: 0.1
+        far: 500
+        role: main
+      script:
+        source: logic/fly_camera.lua
+
+  # === World generator ===
+  - id: worldgen
+    components:
+      transform:
+        position: [0, 0, 0]
+      script:
+        source: logic/procedural_world.lua
+
+  # === Sun (key light, high and warm) ===
+  - id: sun
+    components:
+      transform:
+        position: [40, 60, 30]
+      point_light:
+        color: [1.0, 0.92, 0.8]
+        intensity: 800.0
+        range: 150.0
+
+  # === Sky fill (cool blue from opposite side) ===
+  - id: sky_fill
+    components:
+      transform:
+        position: [-30, 40, -20]
+      point_light:
+        color: [0.4, 0.5, 0.9]
+        intensity: 200.0
+        range: 100.0
+
+  # === Bounce light from below ===
+  - id: bounce
+    components:
+      transform:
+        position: [0, 5, 0]
+      point_light:
+        color: [0.3, 0.5, 0.2]
+        intensity: 50.0
+        range: 60.0

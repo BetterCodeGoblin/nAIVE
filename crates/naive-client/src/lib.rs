@@ -35,6 +35,7 @@ pub mod scripting;
 pub mod shader;
 pub mod splat;
 pub mod test_runner;
+pub mod texture_cache;
 pub mod ui;
 pub mod watcher;
 pub mod world;

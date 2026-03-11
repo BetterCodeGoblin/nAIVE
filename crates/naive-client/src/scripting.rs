@@ -272,6 +272,14 @@ impl ScriptRuntime {
         }).map_err(|e| e.to_string())?;
         input_table.set("any_just_pressed", any_pressed_fn).map_err(|e| e.to_string())?;
 
+        // input.mouse_position() -> (sx, sy) — cursor position in screen pixels
+        let input_rc = input.clone();
+        let mouse_pos_fn = self.lua.create_function(move |_, ()| {
+            let pos = input_rc.borrow().cursor_position();
+            Ok((pos.x, pos.y))
+        }).map_err(|e| e.to_string())?;
+        input_table.set("mouse_position", mouse_pos_fn).map_err(|e| e.to_string())?;
+
         globals.set("input", input_table).map_err(|e| e.to_string())?;
         Ok(())
     }
@@ -949,10 +957,75 @@ impl ScriptRuntime {
                 id, mesh, material: mat,
                 position: [x, y, z],
                 scale: [sx, sy, sz],
+                collider: None, rigid_body: None, script: None,
             });
             Ok(())
         }).map_err(|e| e.to_string())?;
         entity_table.set("spawn", spawn_fn).map_err(|e| e.to_string())?;
+
+        // entity.spawn_ex(config_table) — spawn with optional collider, rigid_body, and script
+        // config_table: { id, mesh, material, position={x,y,z}, scale={x,y,z},
+        //   collider={shape, half_extents, radius, is_trigger, restitution, friction},
+        //   rigid_body="dynamic"|"fixed"|"kinematic", script="logic/foo.lua" }
+        let cmd = cmd_queue.clone();
+        let spawn_ex_fn = self.lua.create_function(move |_, tbl: LuaTable| {
+            let id: String = tbl.get("id").map_err(|e| mlua::Error::runtime(format!("spawn_ex: missing id: {}", e)))?;
+            let mesh: String = tbl.get("mesh").unwrap_or_else(|_| "procedural:cube".to_string());
+            let material: String = tbl.get("material").unwrap_or_else(|_| "procedural:default".to_string());
+
+            let position = if let Ok(pos) = tbl.get::<LuaTable>("position") {
+                [pos.get::<f32>(1).unwrap_or(0.0), pos.get::<f32>(2).unwrap_or(0.0), pos.get::<f32>(3).unwrap_or(0.0)]
+            } else {
+                [tbl.get::<f32>("x").unwrap_or(0.0), tbl.get::<f32>("y").unwrap_or(0.0), tbl.get::<f32>("z").unwrap_or(0.0)]
+            };
+
+            let scale = if let Ok(s) = tbl.get::<LuaTable>("scale") {
+                [s.get::<f32>(1).unwrap_or(1.0), s.get::<f32>(2).unwrap_or(1.0), s.get::<f32>(3).unwrap_or(1.0)]
+            } else {
+                [tbl.get::<f32>("sx").unwrap_or(1.0), tbl.get::<f32>("sy").unwrap_or(1.0), tbl.get::<f32>("sz").unwrap_or(1.0)]
+            };
+
+            let collider = if let Ok(col_tbl) = tbl.get::<LuaTable>("collider") {
+                Some(crate::world::SpawnColliderSpec {
+                    shape: col_tbl.get::<String>("shape").unwrap_or_else(|_| "sphere".to_string()),
+                    half_extents: col_tbl.get::<LuaTable>("half_extents").ok().map(|t| {
+                        [t.get::<f32>(1).unwrap_or(0.5), t.get::<f32>(2).unwrap_or(0.5), t.get::<f32>(3).unwrap_or(0.5)]
+                    }),
+                    radius: col_tbl.get::<f32>("radius").ok(),
+                    is_trigger: col_tbl.get::<bool>("is_trigger").unwrap_or(false),
+                    restitution: col_tbl.get::<f32>("restitution").unwrap_or(0.3),
+                    friction: col_tbl.get::<f32>("friction").unwrap_or(0.5),
+                })
+            } else {
+                None
+            };
+
+            let rigid_body: Option<String> = tbl.get("rigid_body").ok();
+            let script: Option<String> = tbl.get("script").ok();
+
+            let mut cmd = cmd.borrow_mut();
+            cmd.spawns.push(crate::world::SpawnCommand {
+                id, mesh, material,
+                position, scale,
+                collider, rigid_body, script,
+            });
+            Ok(())
+        }).map_err(|e| e.to_string())?;
+        entity_table.set("spawn_ex", spawn_ex_fn).map_err(|e| e.to_string())?;
+
+        // entity.set_texture(id, slot, path) — swap albedo or normal texture at runtime
+        // slot: "albedo" or "normal"
+        let cmd = cmd_queue.clone();
+        let set_tex_fn = self.lua.create_function(move |_, (id, slot, path): (String, String, String)| {
+            let mut cmd = cmd.borrow_mut();
+            cmd.texture_swaps.push(crate::world::TextureSwapCommand {
+                entity_id: id,
+                slot,
+                texture_path: path,
+            });
+            Ok(())
+        }).map_err(|e| e.to_string())?;
+        entity_table.set("set_texture", set_tex_fn).map_err(|e| e.to_string())?;
 
         // entity.destroy(id)
         let cmd = cmd_queue.clone();
@@ -1081,6 +1154,7 @@ impl ScriptRuntime {
                     material: material.clone(),
                     position: [0.0, -1000.0, 0.0], // offscreen
                     scale: [1.0, 1.0, 1.0],
+                    collider: None, rigid_body: None, script: None,
                 });
             }
             Ok(())
@@ -1119,6 +1193,7 @@ impl ScriptRuntime {
                         material,
                         position: [0.0, 0.0, 0.0],
                         scale: [1.0, 1.0, 1.0],
+                        collider: None, rigid_body: None, script: None,
                     });
                     pool_mgr.register_entity(&name, &entity_id);
                     Ok(Some(entity_id))
@@ -1160,6 +1235,89 @@ impl ScriptRuntime {
         Ok(())
     }
 
+    /// Register mesh API (mesh.create for Lua-driven mesh generation).
+    pub fn register_mesh_api(
+        &self,
+        cmd_queue: SharedEntityCommandQueue,
+    ) -> Result<(), String> {
+        let globals = self.lua.globals();
+        let mesh_table = self.lua.create_table().map_err(|e| e.to_string())?;
+
+        // mesh.create(name, vertices_table, indices_table, uvs_table)
+        // vertices: {{x,y,z}, {x,y,z}, ...}
+        // indices: {0, 1, 2, ...}
+        // uvs: {{u,v}, {u,v}, ...} (must match vertex count)
+        let cmd = cmd_queue.clone();
+        let create_fn = self.lua.create_function(move |_, (name, verts_tbl, indices_tbl, uvs_tbl): (String, LuaTable, LuaTable, LuaTable)| {
+            let mut positions = Vec::new();
+            let mut normals = Vec::new();
+            let mut uvs = Vec::new();
+            let mut indices = Vec::new();
+
+            // Parse vertices
+            for v in verts_tbl.sequence_values::<LuaTable>() {
+                let v = v.map_err(|e| mlua::Error::runtime(format!("mesh.create: bad vertex: {}", e)))?;
+                positions.push([
+                    v.get::<f32>(1).unwrap_or(0.0),
+                    v.get::<f32>(2).unwrap_or(0.0),
+                    v.get::<f32>(3).unwrap_or(0.0),
+                ]);
+                // Default normals pointing up
+                normals.push([0.0, 1.0, 0.0]);
+            }
+
+            // Parse indices
+            for idx in indices_tbl.sequence_values::<u32>() {
+                indices.push(idx.map_err(|e| mlua::Error::runtime(format!("mesh.create: bad index: {}", e)))?);
+            }
+
+            // Parse UVs
+            for uv in uvs_tbl.sequence_values::<LuaTable>() {
+                let uv = uv.map_err(|e| mlua::Error::runtime(format!("mesh.create: bad uv: {}", e)))?;
+                uvs.push([
+                    uv.get::<f32>(1).unwrap_or(0.0),
+                    uv.get::<f32>(2).unwrap_or(0.0),
+                ]);
+            }
+
+            // Pad UVs if fewer than positions
+            while uvs.len() < positions.len() {
+                uvs.push([0.0, 0.0]);
+            }
+
+            // Compute flat normals from triangles
+            let mut computed_normals = vec![glam::Vec3::ZERO; positions.len()];
+            for tri in indices.chunks(3) {
+                if tri.len() == 3 {
+                    let (i0, i1, i2) = (tri[0] as usize, tri[1] as usize, tri[2] as usize);
+                    if i0 < positions.len() && i1 < positions.len() && i2 < positions.len() {
+                        let v0 = glam::Vec3::from(positions[i0]);
+                        let v1 = glam::Vec3::from(positions[i1]);
+                        let v2 = glam::Vec3::from(positions[i2]);
+                        let face_normal = (v1 - v0).cross(v2 - v0);
+                        computed_normals[i0] += face_normal;
+                        computed_normals[i1] += face_normal;
+                        computed_normals[i2] += face_normal;
+                    }
+                }
+            }
+            normals = computed_normals.iter().map(|n| {
+                let n = n.normalize_or_zero();
+                if n == glam::Vec3::ZERO { [0.0, 1.0, 0.0] } else { n.to_array() }
+            }).collect();
+
+            let mut cmd = cmd.borrow_mut();
+            cmd.mesh_creates.push(crate::world::MeshCreateCommand {
+                name, positions, normals, uvs, indices,
+            });
+            Ok(())
+        }).map_err(|e| e.to_string())?;
+        mesh_table.set("create", create_fn).map_err(|e| e.to_string())?;
+
+        globals.set("mesh", mesh_table).map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     /// Register camera API (world_to_screen projection).
     pub fn register_camera_api(
         &self,
@@ -1191,6 +1349,29 @@ impl ScriptRuntime {
             Ok((sx, sy, visible))
         }).map_err(|e| e.to_string())?;
         camera_table.set("world_to_screen", w2s_fn).map_err(|e| e.to_string())?;
+
+        // camera.screen_to_ray(sx, sy) -> (ox, oy, oz, dx, dy, dz) — unproject screen pixel to world ray
+        let cs = camera_state.clone();
+        let config = surface_config.clone();
+        let s2r_fn = self.lua.create_function(move |_, (sx, sy): (f32, f32)| {
+            let cs = cs.borrow();
+            let config = config.borrow();
+            let width = config.width as f32;
+            let height = config.height as f32;
+            let ndc_x = (sx / width) * 2.0 - 1.0;
+            let ndc_y = 1.0 - (sy / height) * 2.0;
+            let inv_vp = glam::Mat4::from_cols_array_2d(&cs.uniform.inv_view_projection);
+            let near_clip = inv_vp * glam::Vec4::new(ndc_x, ndc_y, 0.0, 1.0);
+            let far_clip = inv_vp * glam::Vec4::new(ndc_x, ndc_y, 1.0, 1.0);
+            if near_clip.w.abs() < 1e-6 || far_clip.w.abs() < 1e-6 {
+                return Ok((0.0f32, 0.0f32, 0.0f32, 0.0f32, 0.0f32, -1.0f32));
+            }
+            let origin = near_clip.truncate() / near_clip.w;
+            let far_pt = far_clip.truncate() / far_clip.w;
+            let direction = (far_pt - origin).normalize();
+            Ok((origin.x, origin.y, origin.z, direction.x, direction.y, direction.z))
+        }).map_err(|e| e.to_string())?;
+        camera_table.set("screen_to_ray", s2r_fn).map_err(|e| e.to_string())?;
 
         globals.set("camera", camera_table).map_err(|e| e.to_string())?;
         Ok(())

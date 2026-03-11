@@ -9,6 +9,7 @@ use crate::components::MeshHandle;
 pub enum MeshError {
     IoError(String),
     GltfError(gltf::Error),
+    StlError(String),
     NoMeshes,
     NoPrimitives,
     NoPositions,
@@ -19,6 +20,7 @@ impl std::fmt::Display for MeshError {
         match self {
             Self::IoError(msg) => write!(f, "Mesh IO error: {}", msg),
             Self::GltfError(e) => write!(f, "glTF error: {}", e),
+            Self::StlError(msg) => write!(f, "STL error: {}", msg),
             Self::NoMeshes => write!(f, "glTF file contains no meshes"),
             Self::NoPrimitives => write!(f, "glTF mesh has no primitives"),
             Self::NoPositions => write!(f, "glTF primitive has no position data"),
@@ -261,11 +263,29 @@ impl MeshCache {
                     tracing::info!("Generating procedural cube");
                     create_procedural_cube(device)
                 }
+                "plane" => {
+                    tracing::info!("Generating procedural plane");
+                    create_procedural_plane(device, 1.0, 1.0, 1)
+                }
+                "cylinder" => {
+                    tracing::info!("Generating procedural cylinder");
+                    create_procedural_cylinder(device, 0.5, 1.0, 32)
+                }
+                "cone" => {
+                    tracing::info!("Generating procedural cone");
+                    create_procedural_cone(device, 0.5, 1.0, 32)
+                }
+                "torus" => {
+                    tracing::info!("Generating procedural torus");
+                    create_procedural_torus(device, 0.3, 0.1, 32, 16)
+                }
                 _ => {
                     tracing::warn!("Unknown procedural shape '{}', using cube", shape);
                     create_procedural_cube(device)
                 }
             }
+        } else if mesh_path.to_lowercase().ends_with(".stl") {
+            load_stl(device, project_root, mesh_path)?
         } else {
             load_gltf(device, queue, project_root, mesh_path, texture_resources)?
         };
@@ -279,6 +299,42 @@ impl MeshCache {
 
     pub fn get(&self, handle: MeshHandle) -> &GpuMesh {
         &self.meshes[handle.0]
+    }
+
+    /// Insert a runtime mesh built from raw vertex data (from Lua mesh.create).
+    pub fn insert_runtime_mesh(
+        &mut self,
+        device: &wgpu::Device,
+        name: &str,
+        positions: &[[f32; 3]],
+        normals: &[[f32; 3]],
+        uvs: &[[f32; 2]],
+        indices: &[u32],
+    ) -> MeshHandle {
+        let key = PathBuf::from(format!("runtime:{}", name));
+        if let Some(&handle) = self.path_to_handle.get(&key) {
+            return handle;
+        }
+
+        let j = [0u32, 0, 0, 0];
+        let w = [1.0f32, 0.0, 0.0, 0.0];
+        let vertices: Vec<Vertex3D> = positions.iter().enumerate().map(|(i, pos)| {
+            Vertex3D {
+                position: *pos,
+                normal: normals.get(i).copied().unwrap_or([0.0, 1.0, 0.0]),
+                tex_coords: uvs.get(i).copied().unwrap_or([0.0, 0.0]),
+                color: [1.0, 1.0, 1.0, 1.0],
+                joint_indices: j,
+                joint_weights: w,
+            }
+        }).collect();
+
+        let gpu_mesh = build_procedural_gpu_mesh(device, &vertices, indices, &format!("Runtime: {}", name));
+        let handle = MeshHandle(self.meshes.len());
+        self.meshes.push(gpu_mesh);
+        self.path_to_handle.insert(key, handle);
+        tracing::info!("Created runtime mesh '{}': {} vertices, {} indices", name, positions.len(), indices.len());
+        handle
     }
 
     /// Check if a mesh has skin data.
@@ -318,6 +374,97 @@ impl MeshCache {
         }
         None
     }
+}
+
+/// Load an STL file (ASCII or binary) and create GPU buffers.
+/// STL files contain triangles with per-face normals but no UVs or textures.
+fn load_stl(
+    device: &wgpu::Device,
+    project_root: &Path,
+    mesh_path: &str,
+) -> Result<GpuMesh, MeshError> {
+    let full_path = project_root.join(mesh_path);
+
+    if !full_path.exists() {
+        tracing::warn!("STL file not found: {:?}, using procedural cube", full_path);
+        return Ok(create_procedural_cube(device));
+    }
+
+    let mut file = std::fs::OpenOptions::new()
+        .read(true)
+        .open(&full_path)
+        .map_err(|e| MeshError::StlError(format!("Failed to open {:?}: {}", full_path, e)))?;
+
+    let stl = stl_io::read_stl(&mut file)
+        .map_err(|e| MeshError::StlError(format!("Failed to parse {:?}: {}", full_path, e)))?;
+
+    if stl.faces.is_empty() {
+        return Err(MeshError::StlError("STL file contains no triangles".into()));
+    }
+
+    let j = [0u32, 0, 0, 0];
+    let w = [1.0f32, 0.0, 0.0, 0.0];
+
+    // Build per-vertex data from indexed STL
+    let mut vertices: Vec<Vertex3D> = Vec::with_capacity(stl.vertices.len());
+    // Compute per-vertex normals by accumulating face normals
+    let mut vertex_normals = vec![[0.0f32; 3]; stl.vertices.len()];
+
+    for face in &stl.faces {
+        let n = [face.normal[0], face.normal[1], face.normal[2]];
+        for &vi in &face.vertices {
+            let idx = vi as usize;
+            vertex_normals[idx][0] += n[0];
+            vertex_normals[idx][1] += n[1];
+            vertex_normals[idx][2] += n[2];
+        }
+    }
+
+    // Normalize accumulated normals
+    for normal in &mut vertex_normals {
+        let len = (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]).sqrt();
+        if len > 1e-8 {
+            normal[0] /= len;
+            normal[1] /= len;
+            normal[2] /= len;
+        } else {
+            *normal = [0.0, 1.0, 0.0];
+        }
+    }
+
+    for (i, v) in stl.vertices.iter().enumerate() {
+        vertices.push(Vertex3D {
+            position: [v[0], v[1], v[2]],
+            normal: vertex_normals[i],
+            tex_coords: [0.0, 0.0],
+            color: [1.0, 1.0, 1.0, 1.0],
+            joint_indices: j,
+            joint_weights: w,
+        });
+    }
+
+    let indices: Vec<u32> = stl.faces.iter()
+        .flat_map(|face| face.vertices.iter().map(|&vi| vi as u32))
+        .collect();
+
+    tracing::info!(
+        "STL '{}': {} triangles, {} vertices, {} indices",
+        mesh_path,
+        stl.faces.len(),
+        vertices.len(),
+        indices.len()
+    );
+
+    let physics_vertices: Vec<[f32; 3]> = vertices.iter().map(|v| v.position).collect();
+    let physics_indices: Vec<[u32; 3]> = indices.chunks_exact(3)
+        .map(|c| [c[0], c[1], c[2]])
+        .collect();
+
+    let mut gpu_mesh = build_procedural_gpu_mesh(device, &vertices, &indices, &format!("STL: {}", mesh_path));
+    gpu_mesh.physics_vertices = Some(physics_vertices);
+    gpu_mesh.physics_indices = Some(physics_indices);
+
+    Ok(gpu_mesh)
 }
 
 /// Load a glTF file and create GPU buffers.
@@ -886,15 +1033,260 @@ fn create_procedural_cube(device: &wgpu::Device) -> GpuMesh {
         20, 22, 21, 20, 23, 22,  // left
     ];
 
+    build_procedural_gpu_mesh(device, &vertices, &indices, "Procedural Cube")
+}
+
+/// Create a procedural XZ plane centered at the origin.
+fn create_procedural_plane(device: &wgpu::Device, width: f32, depth: f32, subdivisions: u32) -> GpuMesh {
+    let j = [0u32, 0, 0, 0];
+    let w = [1.0f32, 0.0, 0.0, 0.0];
+    let segs = subdivisions + 1;
+    let hw = width / 2.0;
+    let hd = depth / 2.0;
+
+    let mut vertices = Vec::new();
+    let mut indices = Vec::new();
+
+    for iz in 0..=subdivisions {
+        for ix in 0..=subdivisions {
+            let u = ix as f32 / subdivisions as f32;
+            let v = iz as f32 / subdivisions as f32;
+            vertices.push(Vertex3D {
+                position: [-hw + u * width, 0.0, -hd + v * depth],
+                normal: [0.0, 1.0, 0.0],
+                tex_coords: [u, v],
+                color: [1.0, 1.0, 1.0, 1.0],
+                joint_indices: j,
+                joint_weights: w,
+            });
+        }
+    }
+
+    for iz in 0..subdivisions {
+        for ix in 0..subdivisions {
+            let tl = iz * segs + ix;
+            let tr = tl + 1;
+            let bl = (iz + 1) * segs + ix;
+            let br = bl + 1;
+            indices.extend_from_slice(&[tl, br, tr, tl, bl, br]);
+        }
+    }
+
+    build_procedural_gpu_mesh(device, &vertices, &indices, "Procedural Plane")
+}
+
+/// Create a procedural Y-axis aligned cylinder with caps.
+fn create_procedural_cylinder(device: &wgpu::Device, radius: f32, height: f32, segments: u32) -> GpuMesh {
+    let j = [0u32, 0, 0, 0];
+    let w = [1.0f32, 0.0, 0.0, 0.0];
+    let half_h = height / 2.0;
+
+    let mut vertices = Vec::new();
+    let mut indices = Vec::new();
+
+    // Side vertices: two rings
+    for i in 0..=segments {
+        let angle = 2.0 * std::f32::consts::PI * i as f32 / segments as f32;
+        let (sin_a, cos_a) = (angle.sin(), angle.cos());
+        let u = i as f32 / segments as f32;
+
+        // Bottom ring
+        vertices.push(Vertex3D {
+            position: [radius * cos_a, -half_h, radius * sin_a],
+            normal: [cos_a, 0.0, sin_a],
+            tex_coords: [u, 1.0],
+            color: [1.0, 1.0, 1.0, 1.0],
+            joint_indices: j, joint_weights: w,
+        });
+        // Top ring
+        vertices.push(Vertex3D {
+            position: [radius * cos_a, half_h, radius * sin_a],
+            normal: [cos_a, 0.0, sin_a],
+            tex_coords: [u, 0.0],
+            color: [1.0, 1.0, 1.0, 1.0],
+            joint_indices: j, joint_weights: w,
+        });
+    }
+
+    // Side indices
+    for i in 0..segments {
+        let b0 = i * 2;
+        let t0 = b0 + 1;
+        let b1 = b0 + 2;
+        let t1 = b0 + 3;
+        indices.extend_from_slice(&[b0, t1, t0, b0, b1, t1]);
+    }
+
+    // Top cap
+    let top_center = vertices.len() as u32;
+    vertices.push(Vertex3D {
+        position: [0.0, half_h, 0.0], normal: [0.0, 1.0, 0.0],
+        tex_coords: [0.5, 0.5], color: [1.0, 1.0, 1.0, 1.0],
+        joint_indices: j, joint_weights: w,
+    });
+    for i in 0..=segments {
+        let angle = 2.0 * std::f32::consts::PI * i as f32 / segments as f32;
+        let (sin_a, cos_a) = (angle.sin(), angle.cos());
+        vertices.push(Vertex3D {
+            position: [radius * cos_a, half_h, radius * sin_a], normal: [0.0, 1.0, 0.0],
+            tex_coords: [0.5 + 0.5 * cos_a, 0.5 + 0.5 * sin_a],
+            color: [1.0, 1.0, 1.0, 1.0], joint_indices: j, joint_weights: w,
+        });
+    }
+    for i in 0..segments {
+        indices.extend_from_slice(&[top_center, top_center + 1 + i, top_center + 2 + i]);
+    }
+
+    // Bottom cap
+    let bot_center = vertices.len() as u32;
+    vertices.push(Vertex3D {
+        position: [0.0, -half_h, 0.0], normal: [0.0, -1.0, 0.0],
+        tex_coords: [0.5, 0.5], color: [1.0, 1.0, 1.0, 1.0],
+        joint_indices: j, joint_weights: w,
+    });
+    for i in 0..=segments {
+        let angle = 2.0 * std::f32::consts::PI * i as f32 / segments as f32;
+        let (sin_a, cos_a) = (angle.sin(), angle.cos());
+        vertices.push(Vertex3D {
+            position: [radius * cos_a, -half_h, radius * sin_a], normal: [0.0, -1.0, 0.0],
+            tex_coords: [0.5 + 0.5 * cos_a, 0.5 - 0.5 * sin_a],
+            color: [1.0, 1.0, 1.0, 1.0], joint_indices: j, joint_weights: w,
+        });
+    }
+    for i in 0..segments {
+        indices.extend_from_slice(&[bot_center, bot_center + 2 + i, bot_center + 1 + i]);
+    }
+
+    build_procedural_gpu_mesh(device, &vertices, &indices, "Procedural Cylinder")
+}
+
+/// Create a procedural Y-axis cone with a base cap.
+fn create_procedural_cone(device: &wgpu::Device, radius: f32, height: f32, segments: u32) -> GpuMesh {
+    let j = [0u32, 0, 0, 0];
+    let w = [1.0f32, 0.0, 0.0, 0.0];
+    let half_h = height / 2.0;
+    let slope = radius / height;
+
+    let mut vertices = Vec::new();
+    let mut indices = Vec::new();
+
+    // Tip vertex
+    let tip_idx = 0u32;
+    vertices.push(Vertex3D {
+        position: [0.0, half_h, 0.0], normal: [0.0, 1.0, 0.0],
+        tex_coords: [0.5, 0.0], color: [1.0, 1.0, 1.0, 1.0],
+        joint_indices: j, joint_weights: w,
+    });
+
+    // Base ring vertices for sides
+    for i in 0..=segments {
+        let angle = 2.0 * std::f32::consts::PI * i as f32 / segments as f32;
+        let (sin_a, cos_a) = (angle.sin(), angle.cos());
+        let ny = slope;
+        let len = (1.0 + ny * ny).sqrt();
+        vertices.push(Vertex3D {
+            position: [radius * cos_a, -half_h, radius * sin_a],
+            normal: [cos_a / len, ny / len, sin_a / len],
+            tex_coords: [i as f32 / segments as f32, 1.0],
+            color: [1.0, 1.0, 1.0, 1.0], joint_indices: j, joint_weights: w,
+        });
+    }
+
+    // Side triangles
+    for i in 0..segments {
+        indices.extend_from_slice(&[tip_idx, 1 + i, 2 + i]);
+    }
+
+    // Base cap
+    let bot_center = vertices.len() as u32;
+    vertices.push(Vertex3D {
+        position: [0.0, -half_h, 0.0], normal: [0.0, -1.0, 0.0],
+        tex_coords: [0.5, 0.5], color: [1.0, 1.0, 1.0, 1.0],
+        joint_indices: j, joint_weights: w,
+    });
+    for i in 0..=segments {
+        let angle = 2.0 * std::f32::consts::PI * i as f32 / segments as f32;
+        let (sin_a, cos_a) = (angle.sin(), angle.cos());
+        vertices.push(Vertex3D {
+            position: [radius * cos_a, -half_h, radius * sin_a], normal: [0.0, -1.0, 0.0],
+            tex_coords: [0.5 + 0.5 * cos_a, 0.5 - 0.5 * sin_a],
+            color: [1.0, 1.0, 1.0, 1.0], joint_indices: j, joint_weights: w,
+        });
+    }
+    for i in 0..segments {
+        indices.extend_from_slice(&[bot_center, bot_center + 2 + i, bot_center + 1 + i]);
+    }
+
+    build_procedural_gpu_mesh(device, &vertices, &indices, "Procedural Cone")
+}
+
+/// Create a procedural torus (donut) centered at the origin in the XZ plane.
+fn create_procedural_torus(
+    device: &wgpu::Device,
+    major_radius: f32,
+    minor_radius: f32,
+    major_segments: u32,
+    minor_segments: u32,
+) -> GpuMesh {
+    let j = [0u32, 0, 0, 0];
+    let w = [1.0f32, 0.0, 0.0, 0.0];
+    let pi2 = 2.0 * std::f32::consts::PI;
+
+    let mut vertices = Vec::new();
+    let mut indices = Vec::new();
+
+    for i in 0..=major_segments {
+        let theta = pi2 * i as f32 / major_segments as f32;
+        let (sin_t, cos_t) = (theta.sin(), theta.cos());
+
+        for k in 0..=minor_segments {
+            let phi = pi2 * k as f32 / minor_segments as f32;
+            let (sin_p, cos_p) = (phi.sin(), phi.cos());
+
+            let x = (major_radius + minor_radius * cos_p) * cos_t;
+            let y = minor_radius * sin_p;
+            let z = (major_radius + minor_radius * cos_p) * sin_t;
+
+            vertices.push(Vertex3D {
+                position: [x, y, z],
+                normal: [cos_p * cos_t, sin_p, cos_p * sin_t],
+                tex_coords: [i as f32 / major_segments as f32, k as f32 / minor_segments as f32],
+                color: [1.0, 1.0, 1.0, 1.0],
+                joint_indices: j, joint_weights: w,
+            });
+        }
+    }
+
+    let ring_size = minor_segments + 1;
+    for i in 0..major_segments {
+        for k in 0..minor_segments {
+            let a = i * ring_size + k;
+            let b = a + 1;
+            let c = (i + 1) * ring_size + k;
+            let d = c + 1;
+            indices.extend_from_slice(&[a, d, b, a, c, d]);
+        }
+    }
+
+    build_procedural_gpu_mesh(device, &vertices, &indices, "Procedural Torus")
+}
+
+/// Helper to build a GpuMesh from vertex and index data.
+fn build_procedural_gpu_mesh(
+    device: &wgpu::Device,
+    vertices: &[Vertex3D],
+    indices: &[u32],
+    label: &str,
+) -> GpuMesh {
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some("Procedural Cube VB"),
-        contents: bytemuck::cast_slice(&vertices),
+        label: Some(&format!("{} VB", label)),
+        contents: bytemuck::cast_slice(vertices),
         usage: wgpu::BufferUsages::VERTEX,
     });
 
     let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some("Procedural Cube IB"),
-        contents: bytemuck::cast_slice(&indices),
+        label: Some(&format!("{} IB", label)),
+        contents: bytemuck::cast_slice(indices),
         usage: wgpu::BufferUsages::INDEX,
     });
 

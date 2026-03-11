@@ -7,12 +7,15 @@ struct DrawUniforms {
     float4 base_color;
     float roughness;
     float metallic;
-    float2 _pad;
+    float has_texture;
+    float has_skin;
     float4 emission;
 };
 
 [[vk::binding(0, 0)]] ConstantBuffer<CameraUniform> camera;
 [[vk::binding(0, 1)]] ConstantBuffer<DrawUniforms> draw;
+[[vk::binding(0, 2)]] Texture2D<float4> albedo_texture;
+[[vk::binding(1, 2)]] SamplerState albedo_sampler;
 
 struct VertexInput {
     float3 position : POSITION;
@@ -50,7 +53,12 @@ VertexOutput vs_main(VertexInput input) {
 [shader("fragment")]
 GBufferOutput fs_main(VertexOutput input) {
     GBufferOutput output;
-    output.albedo = float4(draw.base_color.rgb * input.vertexColor.rgb, draw.roughness);
+    float3 base = draw.base_color.rgb * input.vertexColor.rgb;
+    if (draw.has_texture > 0.5) {
+        float4 tex = albedo_texture.Sample(albedo_sampler, input.texCoord);
+        base *= tex.rgb;
+    }
+    output.albedo = float4(base, draw.roughness);
     output.normal = float4(input.worldNormal * 0.5 + 0.5, draw.metallic);
     output.emission = float4(draw.emission.rgb, 0.0);
     return output;

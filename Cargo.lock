@@ -1062,6 +1062,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "float-cmp"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "foldhash"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2080,7 +2089,7 @@ dependencies = [
 
 [[package]]
 name = "naive-client"
-version = "0.1.17"
+version = "0.1.18"
 dependencies = [
  "base64 0.22.1",
  "bytemuck",
@@ -2103,6 +2112,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "shader-slang",
+ "stl_io",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -2113,7 +2123,7 @@ dependencies = [
 
 [[package]]
 name = "naive-core"
-version = "0.1.17"
+version = "0.1.18"
 dependencies = [
  "glam",
  "hecs",
@@ -2125,7 +2135,7 @@ dependencies = [
 
 [[package]]
 name = "naive-runtime"
-version = "0.1.17"
+version = "0.1.18"
 dependencies = [
  "clap",
  "naive-client",
@@ -2137,7 +2147,7 @@ dependencies = [
 
 [[package]]
 name = "naive-server"
-version = "0.1.17"
+version = "0.1.18"
 dependencies = [
  "naive-core",
  "serde",
@@ -3616,6 +3626,16 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "stl_io"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d520eb03e632e666ac32f3c0cf018ac6dcd535ab0be1420937e2d896f44f7cf7"
+dependencies = [
+ "byteorder",
+ "float-cmp",
+]
 
 [[package]]
 name = "strict-num"

@@ -1,0 +1,6 @@
+shader: pbr
+properties:
+  base_color: [0.4, 0.7, 0.3]
+  roughness: 0.8
+  metallic: 0.0
+  albedo_map: assets/textures/grass.png
