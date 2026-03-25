@@ -444,7 +444,7 @@ pub fn run_demo(selector: Option<&str>) -> Option<CliArgs> {
         pipeline: Some("pipelines/render.yaml".to_string()),
         output: OutputMode::Window,
         project: project_root.to_string_lossy().to_string(),
-        socket: "/tmp/naive-runtime.sock".to_string(),
+        socket: crate::command::default_port_file(),
         hud: false,
         editor_mode: false,
     })

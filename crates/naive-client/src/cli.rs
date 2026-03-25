@@ -23,8 +23,8 @@ pub struct CliArgs {
     #[arg(long, default_value = "project")]
     pub project: String,
 
-    /// Path to the command socket for external control
-    #[arg(long, default_value = "/tmp/naive-runtime.sock")]
+    /// Path to the port file used for external IPC (TCP command server)
+    #[arg(long, default_value = "")]
     pub socket: String,
 
     /// Show the render debug HUD on startup

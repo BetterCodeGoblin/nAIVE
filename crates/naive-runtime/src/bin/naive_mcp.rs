@@ -1,19 +1,24 @@
 //! MCP (Model Context Protocol) server binary for nAIVE engine.
 //!
-//! Bridges JSON-RPC 2.0 over stdin/stdout to the engine's Unix domain socket.
-//! Usage: naive_mcp [socket_path]
-//! Default socket: /tmp/naive-runtime.sock
+//! Bridges JSON-RPC 2.0 over stdin/stdout to the engine's TCP command server.
+//! Usage: naive_mcp [port_file]
+//! Default port file: <temp_dir>/naive-runtime.port
 
 use std::io::{self, BufRead, BufReader, Write};
-use std::os::unix::net::UnixStream;
+use std::net::TcpStream;
 
 use serde_json::{json, Value};
 
-const DEFAULT_SOCKET: &str = "/tmp/naive-runtime.sock";
+fn default_port_file() -> String {
+    std::env::temp_dir()
+        .join("naive-runtime.port")
+        .to_string_lossy()
+        .into_owned()
+}
 const PROTOCOL_VERSION: &str = "2024-11-05";
 
 fn main() {
-    let socket_path = std::env::args().nth(1).unwrap_or_else(|| DEFAULT_SOCKET.into());
+    let socket_path = std::env::args().nth(1).unwrap_or_else(default_port_file);
 
     let stdin = io::stdin();
     let stdout = io::stdout();
@@ -178,9 +183,15 @@ fn handle_tools_call(id: Option<Value>, request: &Value, socket_path: &str) -> V
     }
 }
 
-fn send_command(socket_path: &str, command: &Value) -> Result<Value, String> {
-    let mut stream = UnixStream::connect(socket_path)
-        .map_err(|e| format!("Cannot connect to {}: {}", socket_path, e))?;
+fn send_command(port_file: &str, command: &Value) -> Result<Value, String> {
+    // Read port from port file
+    let port_str = std::fs::read_to_string(port_file)
+        .map_err(|e| format!("Cannot read port file {}: {}", port_file, e))?;
+    let port: u16 = port_str.trim().parse()
+        .map_err(|e| format!("Invalid port in {}: {}", port_file, e))?;
+
+    let mut stream = TcpStream::connect(format!("127.0.0.1:{}", port))
+        .map_err(|e| format!("Cannot connect to 127.0.0.1:{}: {}", port, e))?;
     stream.set_read_timeout(Some(std::time::Duration::from_secs(5)))
         .map_err(|e| format!("set_read_timeout: {}", e))?;
 

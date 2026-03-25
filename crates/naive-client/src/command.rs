@@ -46,20 +46,28 @@ pub struct PendingCommand {
     pub responder: mpsc::Sender<CommandResponse>,
 }
 
-/// Command socket server. Runs a tokio runtime on a background thread,
-/// accepts connections on a Unix domain socket, and forwards commands
-/// to the main thread via a channel.
+/// Command server. Runs a tokio runtime on a background thread,
+/// accepts TCP connections on 127.0.0.1, and forwards commands
+/// to the main thread via a channel. The bound port is written to
+/// a port file so naive_mcp can discover it.
 pub struct CommandServer {
     cmd_rx: mpsc::Receiver<PendingCommand>,
+    /// Path to the port file (e.g. /tmp/naive-runtime.port)
     pub socket_path: String,
 }
 
-impl CommandServer {
-    pub fn start(socket_path: &str) -> Result<Self, String> {
-        let _ = std::fs::remove_file(socket_path);
+/// Returns the platform-appropriate port file path.
+pub fn default_port_file() -> String {
+    std::env::temp_dir()
+        .join("naive-runtime.port")
+        .to_string_lossy()
+        .into_owned()
+}
 
+impl CommandServer {
+    pub fn start(port_file: &str) -> Result<Self, String> {
         let (cmd_tx, cmd_rx) = mpsc::channel();
-        let path = socket_path.to_string();
+        let port_file_path = port_file.to_string();
 
         std::thread::spawn(move || {
             let rt = tokio::runtime::Builder::new_current_thread()
@@ -68,14 +76,19 @@ impl CommandServer {
                 .expect("Failed to create tokio runtime for command server");
 
             rt.block_on(async move {
-                let listener = match tokio::net::UnixListener::bind(&path) {
+                let listener = match tokio::net::TcpListener::bind("127.0.0.1:0").await {
                     Ok(l) => l,
                     Err(e) => {
-                        tracing::error!("Failed to bind command socket at {}: {}", path, e);
+                        tracing::error!("Failed to bind command TCP listener: {}", e);
                         return;
                     }
                 };
-                tracing::info!("Command socket listening on {}", path);
+                let port = listener.local_addr().map(|a| a.port()).unwrap_or(0);
+                // Write port to file so naive_mcp can connect
+                if let Err(e) = std::fs::write(&port_file_path, port.to_string()) {
+                    tracing::error!("Failed to write port file {}: {}", port_file_path, e);
+                }
+                tracing::info!("Command server listening on 127.0.0.1:{}", port);
 
                 loop {
                     match listener.accept().await {
@@ -84,14 +97,14 @@ impl CommandServer {
                             tokio::spawn(handle_connection(stream, tx));
                         }
                         Err(e) => {
-                            tracing::warn!("Command socket accept error: {}", e);
+                            tracing::warn!("Command server accept error: {}", e);
                         }
                     }
                 }
             });
         });
 
-        Ok(Self { cmd_rx, socket_path: socket_path.to_string() })
+        Ok(Self { cmd_rx, socket_path: port_file.to_string() })
     }
 
     /// Poll for pending commands (non-blocking).
@@ -111,7 +124,7 @@ impl Drop for CommandServer {
 }
 
 async fn handle_connection(
-    stream: tokio::net::UnixStream,
+    stream: tokio::net::TcpStream,
     cmd_tx: mpsc::Sender<PendingCommand>,
 ) {
     use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
