@@ -103,6 +103,7 @@ The Seeker does not have a fixed name or gender. In the opening sequence, the pl
 | River-Keeper | Ojibwe-inspired | Storm Bow | Spirit Vision lasts 2s longer |
 | Red Earth Walker | Navajo/Diné-inspired | Medicine Blade | Crafting produces 1 extra component |
 | Stone-Tongue | Haudenosaunee-inspired | Bone Club | Stagger resistance +15% |
+| Sky-Weaver | Wyandotte/Wendat-inspired | Trading Hatchet | Clan-based buff: +10% crafting efficiency when holding three different material types |
 
 Lineage is permanent (per save file) and chosen once. It can be reset with a deliberate "Begin Again" option that wipes all meta-progression.
 
@@ -112,6 +113,28 @@ Lineage is permanent (per save file) and chosen once. It can be reset with a del
 - Base garment color and wrap style
 - Starting talisman (cosmetic, but carries narrative flavor text about the Seeker's history)
 - Scar patterns (earned through gameplay — each significant death or survival milestone unlocks one)
+
+### 2a. The Sky-Weaver (Wyandotte/Wendat Lineage)
+
+**Heritage:** The Wyandotte (Wendat) are an Iroquoian-speaking confederation from the Great Lakes region, historically centered around present-day southern Ontario and the Georgian Bay area. The Wyandotte Confederacy was organized into three clans — Turtle, Bear, and Beaver — each with distinct responsibilities to the whole. Their economy was built on sophisticated trading networks spanning from the Atlantic coast to the Mississippi River. The Sky Woman creation myth, central to Haudenosaunee and related Iroquoian traditions, describes the first woman falling from Sky World and being caught by animals, creating Turtle Island (North America).
+
+**Seeker Type:** The Sky-Weaver is a diplomat-hunter — a Seeker trained in the art of reciprocal exchange and covenant-making. They do not hunt to dominate, but to establish relationship and balance. Their power comes not from individual prowess but from the strength of their connections and the depth of their spiritual alliances.
+
+**Starting Equipment:**
+- **Trading Hatchet** — A compact, balanced blade tool used historically for trade, travel, and hunting. Fast attacks, moderate damage, and acts as both weapon and utility tool. Special ability: *Exchange Strike* — grants +1 Spirit charge to you and transfers +1 Spirit charge to allies/constructs within 8m for 6 seconds (useful in multiplayer or co-op scenarios; in single-player, stacks with summoned spirits). Innate passive: crafting produces +1 extra component of random type.
+
+**Lineage Passive — Clan Bond:** Select a clan affiliation at run start:
+- **Turtle Clan** — Earth connection; +20% physical defense, -10% Spirit resource recovery
+- **Bear Clan** — Combat connection; +15% damage output, -10% stamina recovery rate
+- **Beaver Clan** — Trade connection; +25% crafting efficiency, -10% max health
+
+Once selected, the clan bonus persists for the run. At sacred sites, you can perform a *Covenant Ritual* to switch clans (costs 1 Spirit Mark). Switching grants a 30-second buff (+30% to the new clan's bonus) before the new clan becomes active.
+
+**Unique Ability — Sky World Sight:** Once per encounter, the Sky-Weaver can perform a brief meditation that reveals all weak points, harvestabl nodes, and hidden paths to the spirit realm simultaneously for 8 seconds. This is more powerful than Spirit Sight but has a 4-minute cooldown and cannot be used during combat (enemies reset their alert state if used mid-fight). Codex lore ties this to the Sky Woman teaching of interconnectedness.
+
+**Thematic Connection:** The Wyandotte Confederacy's strength came from unity-in-diversity, with each clan contributing its gifts to the whole. The Sky-Weaver embodies this through their clan system, where different covenant choices create different playstyles, and the ability to switch them emphasizes adaptability and balance. Unlike the solitary prowess of the Walks-in-Thunder or the mystical focus of Red Earth Walker, the Sky-Weaver's power is relational.
+
+---
 
 ### Starting Abilities
 
@@ -342,6 +365,60 @@ Spirit Marks reset each run. Persistent meta-progression is tracked separately (
 - Medicine Scar Plate — rare material, resistance to spirit-suppression effects
 - Fractured Soul Shard — rare drop, Spirit Bonding component; passive: Spirit Intercept resistance
 - *Seeker's Codex Entry:* "There are things that happen in a person that lead them to this. I don't know what they were. The traditions that speak of beings like this are careful about what they say out loud — some things, spoken, become more real. What I know is that this being made choices. So did I. The difference matters, even if I can't always see it clearly."*
+
+---
+
+### 3.9 The False Trader (Gauhéta / Trade Spirit Corrupted)
+
+**Lore Origin:** Wyandotte/Wendat tradition. The Gauhéta in uncorrupted form is a spirit guide associated with fair trade and reciprocal exchange — the kind of spirit that helped the confederacy's trading networks thrive. However, when a Seeker strays too far from the principles of covenant and balance, the Gauhéta inverts: it becomes the False Trader, a being that offers deals too good to refuse, then collects in ways you didn't agree to.
+
+**Gameplay note:** The False Trader is unique in that it does not immediately attack. The first phase is negotiation-based. If the Seeker accepts a trade deal, their abilities are temporarily modified (sometimes for better, sometimes worse). Refusing the deal triggers combat. This makes it a psychological hunt as much as a physical one.
+
+**Appearance:** Humanoid but mercurial. Its form shifts between various guises — a friendly Wyandotte trader, a glossy-skinned figure made of wampum shells, a shape made entirely of trade goods (copper, furs, woven cloth) that blur together. Its true form is never entirely stable. When angered, it becomes skeletal, with hollowed eyes that glow like lit fires.
+
+**Behavior:** Cunning and deliberately evasive. It does not engage in straightforward combat — it uses manipulation, summons false copies of the Seeker's own inventory (illusory items that burn the Seeker's stamina if used), and creates zones where traded resources must be handed over to pass through. The False Trader is vulnerable only when its deception is directly challenged — when the Seeker deliberately destroys a false item or walks away from a deal.
+
+**Attack Patterns:**
+- *Deceptive Offer* — Presents three trade options, each modifying a stat. Must select one; incorrect choice causes debuffs; correct choice grants minor buff
+- *Wampum Shatter* — Throws shells that create zones; traversing without a shell causes Confused status
+- *False Echo* — Summons copies of the Seeker that mimic their attacks with stolen Spirit abilities
+- *Phase 2 — The Untrading* — At 50% health, reveals its true form. All previous trades are reversed (buffs become debuffs). Only way to end the fight is to land three Truth Strikes (attacks that destroy the False Trader's held items)
+- *Covenant Break* — If the Seeker refuses three consecutive trade offers, the False Trader enters a rage state. Damage output increases 3x, but all attacks become blockable with the Shield Wall ability
+
+**Weaknesses:** Direct, honest combat (no Spirit Abilities — the False Trader draws power from spiritual deception). Destroying illusions reduces its health directly. Cedar smoke prevents new trade offers from being generated. The Trading Hatchet's *Exchange Strike* causes the False Trader's buffs to swap with the Seeker's debuffs, often putting the monster at disadvantage.
+
+**Hunt Rewards:**
+- Wampum Shell Fragment — crafting material, enables "truthful" armor that reveals enemy stats
+- False Trader's Ledger — unique item, grants +20% to material gained from hunts but attracts the False Trader to future encounters
+- Covenant Breach Stone — rare drop, Spirit Bonding component; passive: trade-based effects have 50% reduced duration, but you gain +25% to material hoarding
+- *Seeker's Codex Entry:* "The Gauhéta teaches a hard lesson. The confederacy's traders made their reputation on honest dealing, on covenants that everyone understood. This being — this corrupted echo — exists because someone forgot that principle. If you hunt it, remember: fair dealing is not weakness. It is strength."*
+
+---
+
+### 3.10 The Turtle Titan (Skenandoah / Turtle Island Guardian)
+
+**Lore Origin:** Wyandotte and Haudenosaunee creation myth. In the Sky Woman story, after falling from Sky World, the sky woman was caught on Turtle's back. From there, the world was built — earth piled on the turtle's shell, creating Turtle Island (North America). The Turtle Titan in its balanced form is a protector, a bearer of ancient stability. But when greed and disrespect accumulate, the Turtle Titan wakes angry.
+
+**Gameplay note:** This is the "nature's wrath" encounter for the Wyandotte, tied to the ecological balance theme. The arena itself is alive — forest floor has predator pits, roots that grab, and shifting terrain. The Turtle Titan is slow but nearly immobile and incredibly tanky.
+
+**Appearance:** Titanic turtle, 20+ meters long, with a shell that is a fully-realized ecosystem: moss, trees, streams, birds all living on its back. The shell is covered in ancient petroglyphs that glow softly. Eyes are deep amber, older than anything. When wounded, earth bleeds from the wounds — literal soil and roots spilling out.
+
+**Behavior:** Stationary by design. It does not chase — it is defended by the terrain around it. The arena is its body. Walking on the shell is walking through layers of ecosystem. As the hunt progresses and the Titan is damaged, more of the shell collapses or transforms, making some paths impossible and opening new ones. The fight is less about "hitting the boss" and more about navigating a catastrophically transforming landscape while the Titan's slow, heavy attacks reshape everything.
+
+**Attack Patterns:**
+- *Shell Crash* — Shakes violently, throwing players into the air, collapsing terrain sections
+- *Root Surge* — Sends roots crawling across the arena that grab players and inflict Rooted status (cannot move for 4 seconds)
+- *Slow Pursuit* — Despite its size, moves surprisingly far when it chooses to, crushing terrain; creates new obstacles but opens new paths
+- *Phase 2 — Shell Breaking* — At 60% health, petroglyph symbols crack. Each cracked symbol opens a pit beneath, but also removes the Titan's defense in that area (must navigate to cracked areas to deal damage)
+- *Rebirth* — At 35% health, the Titan partially retreats into its shell. New creatures (forest elemental spirits) spawn from the environmental debris; they protect the Titan; the Seeker must clear them to re-engage
+
+**Weaknesses:** The ecosystem on its back is vulnerable to fire (destroys armor value of that section). Earthquake-type moves (Bone Club ground waves, Thunder-based impacts) cause the Titan to temporarily lose position and slide backward. Once a section of shell is damaged enough, the exposed interior (soft earth-core) takes 3x damage. Navigation (finding safe paths through the breaking terrain) is as important as damage output.
+
+**Hunt Rewards:**
+- Shell Fragment (Petrified) — highest-tier armor material, extremely heavy, highest defense
+- Root Tendril — weapon material, adds bleeding / nature damage on hit
+- Titan's Heart (Core Stone) — rare drop, Spirit Bonding component; passive: phase through terrain once per 30 seconds, ground-based attacks cost 25% less stamina
+- *Seeker's Codex Entry:* "The Turtle that holds the world isn't angry at us — it's angry at what we've done to the world it holds. This hunt isn't about defeating the Titan. It's about earning its forgiveness. Tread carefully. Respect what you're standing on. Every footstep matters."*
 
 ---
 

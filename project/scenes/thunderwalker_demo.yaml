@@ -1,4 +1,28 @@
 name: "Thunderwalker Demo — The Wendigo at Frozen Creek"
+
+# ════════════════════════════════════════════════════════════════════════════
+# SEEKER LINEAGE OPTIONS
+# ════════════════════════════════════════════════════════════════════════════
+# This scene supports multiple Seeker lineages. To select a lineage, modify
+# the player entity's `seeker_lineage` property below, or select via in-game UI.
+#
+# Available Lineages:
+#   - walks-in-thunder   (Lakota-inspired, Spirit Lance, +1 stamina segment)
+#   - river-keeper       (Ojibwe-inspired, Storm Bow, +2s Spirit Vision duration)
+#   - red-earth-walker   (Navajo/Diné-inspired, Medicine Blade, +1 extra crafting component)
+#   - stone-tongue       (Haudenosaunee-inspired, Bone Club, +15% stagger resistance)
+#   - sky-weaver         (Wyandotte/Wendat-inspired, Trading Hatchet, Clan-based buffs)
+#
+# NEW: Sky-Weaver (Wyandotte) Lineage
+# Unique Mechanics:
+#   - Starting Weapon: Trading Hatchet (fast, +1 component crafting)
+#   - Clan System: Choose Turtle, Bear, or Beaver clan for unique bonuses
+#   - Sky World Sight: Powerful meditation ability for enhanced detection
+#   - Exchange Strike: Ability to transfer Spirit charges in multiplayer/co-op
+#
+# Learn more: See THUNDERWALKER_GDD.md Section 2a (The Sky-Weaver)
+# ════════════════════════════════════════════════════════════════════════════
+
 settings:
   ambient_light: [0.08, 0.10, 0.18]
   gravity: [0, -9.81, 0]
@@ -6,8 +30,13 @@ settings:
 entities:
 
   # ── Player (Seeker) ───────────────────────────────────────────────────────
+  # To use the Sky-Weaver (Wyandotte) lineage, uncomment the seeker_lineage line
+  # and set it to: seeker_lineage: sky-weaver
   - id: player
     tags: [player]
+    # Seeker lineage: Choose from walks-in-thunder, river-keeper, red-earth-walker,
+    # stone-tongue, or sky-weaver (Wyandotte). Default: walks-in-thunder
+    seeker_lineage: walks-in-thunder  # Change to 'sky-weaver' to try the Wyandotte lineage
     components:
       transform:
         position: [0, 2, 10]
