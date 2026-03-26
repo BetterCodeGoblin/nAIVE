@@ -1,0 +1,114 @@
+name: Build Windows Demo
+
+on:
+  push:
+    tags:
+      - "demo-v*"
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Download SLANG SDK
+        run: |
+          if (-not (Test-Path "vendor/slang")) {
+            Write-Host "Downloading SLANG SDK..."
+            mkdir -p vendor
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri "https://github.com/shader-slang/slang/releases/download/v2026.2.1/slang-2026.2.1-windows-x86_64.zip" -OutFile "vendor/slang.zip"
+            Expand-Archive -Path "vendor/slang.zip" -DestinationPath "vendor/"
+            Remove-Item "vendor/slang.zip"
+          }
+      
+      - name: Build release
+        run: cargo build --release
+        env:
+          SLANG_DIR: ${{ github.workspace }}/vendor/slang
+      
+      - name: Create demo package
+        run: |
+          $DemoDir = "thunderwalker-demo-windows"
+          mkdir -p "$DemoDir/project"
+          mkdir -p "$DemoDir/dlls"
+          
+          # Copy executable and DLLs
+          Copy-Item "target/release/naive.exe" "$DemoDir/project/"
+          Copy-Item "vendor/slang/lib/*.dll" "$DemoDir/project/" -ErrorAction SilentlyContinue
+          Copy-Item "vendor/slang/bin/*.dll" "$DemoDir/dlls/" -ErrorAction SilentlyContinue
+          
+          # Copy project assets
+          Copy-Item "project/scenes" "$DemoDir/project/" -Recurse
+          Copy-Item "project/logic" "$DemoDir/project/" -Recurse
+          Copy-Item "project/assets" "$DemoDir/project/" -Recurse
+          Copy-Item "project/pipelines" "$DemoDir/project/" -Recurse
+          Copy-Item "project/naive.yaml" "$DemoDir/project/"
+          
+          # Create play.bat
+          @"
+          @echo off
+          cd /d "%~dp0project"
+          echo Starting Thunderwalker...
+          naive.exe run
+          if %ERRORLEVEL% neq 0 (
+              echo.
+              echo ERROR: Game failed to start. See message above.
+              pause
+          )
+          "@ | Out-File -Encoding ASCII "$DemoDir/play.bat"
+          
+          # Create README
+          @"
+          # Thunderwalker Demo
+          
+          Monster Hunter roguelike powered by nAIVE.
+          
+          ## How to Play
+          
+          1. Extract this zip
+          2. Double-click `play.bat`
+          3. Hunt the Wendigo
+          
+          Requirements:
+          - Windows 10/11
+          - Vulkan GPU (NVIDIA, AMD, Intel Arc)
+          
+          "@ | Out-File -Encoding UTF8 "$DemoDir/README.txt"
+      
+      - name: Create release archive
+        run: |
+          7z a thunderwalker-demo-windows.zip thunderwalker-demo-windows/
+      
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: thunderwalker-demo-windows.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
