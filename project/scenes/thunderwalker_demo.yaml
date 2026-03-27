@@ -41,7 +41,7 @@ entities:
       transform:
         position: [0, 2, 10]
       mesh_renderer:
-        mesh: procedural:cube
+        mesh: assets/meshes/seeker_warrior.glb
         material: assets/materials/blue.yaml
       camera:
         fov: 75
@@ -118,7 +118,7 @@ entities:
         position: [0, 2, -28]
         scale: [1.5, 4.5, 1.5]
       mesh_renderer:
-        mesh: procedural:cube
+        mesh: assets/meshes/wendigo_creature.glb
         material: assets/materials/default.yaml
       health:
         max: 200
@@ -260,7 +260,7 @@ entities:
         position: [5, 0.6, -8]
         scale: [2.0, 1.2, 1.8]
       mesh_renderer:
-        mesh: procedural:cube
+        mesh: assets/meshes/rock_formation.glb
         material: assets/materials/stone.yaml
       collider:
         shape: box

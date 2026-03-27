@@ -620,24 +620,32 @@ impl ScriptRuntime {
         // entity.get_health(id) -> current, max
         let sw = scene_world.clone();
         let get_health_fn = self.lua.create_function(move |_, id: String| {
-            let sw = sw.borrow();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(health) = sw.world.get::<&Health>(entity) {
-                    return Ok((health.current, health.max));
+            let result = {
+                let sw = sw.borrow();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(health) = sw.world.get::<&Health>(entity) {
+                        (health.current, health.max)
+                    } else {
+                        (0.0f32, 0.0f32)
+                    }
+                } else {
+                    (0.0f32, 0.0f32)
                 }
-            }
-            Ok((0.0f32, 0.0f32))
+            };
+            Ok(result)
         }).map_err(|e| e.to_string())?;
         entity_table.set("get_health", get_health_fn).map_err(|e| e.to_string())?;
 
         // entity.set_health(id, current, max)
         let sw = scene_world.clone();
         let set_health_fn = self.lua.create_function(move |_, (id, current, max): (String, f32, f32)| {
-            let sw = sw.borrow_mut();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(mut health) = sw.world.get::<&mut Health>(entity) {
-                    health.current = current;
-                    health.max = max;
+            {
+                let sw = sw.borrow_mut();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(mut health) = sw.world.get::<&mut Health>(entity) {
+                        health.current = current;
+                        health.max = max;
+                    }
                 }
             }
             Ok(())
@@ -647,65 +655,91 @@ impl ScriptRuntime {
         // entity.damage(id, amount) -> new_current
         let sw = scene_world.clone();
         let damage_fn = self.lua.create_function(move |_, (id, amount): (String, f32)| {
-            let sw = sw.borrow_mut();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(mut health) = sw.world.get::<&mut Health>(entity) {
-                    health.current = (health.current - amount).max(0.0);
-                    return Ok(health.current);
+            let result = {
+                let sw = sw.borrow_mut();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(mut health) = sw.world.get::<&mut Health>(entity) {
+                        health.current = (health.current - amount).max(0.0);
+                        health.current
+                    } else {
+                        0.0f32
+                    }
+                } else {
+                    0.0f32
                 }
-            }
-            Ok(0.0f32)
+            };
+            Ok(result)
         }).map_err(|e| e.to_string())?;
         entity_table.set("damage", damage_fn).map_err(|e| e.to_string())?;
 
         // entity.heal(id, amount) -> new_current
         let sw = scene_world.clone();
         let heal_fn = self.lua.create_function(move |_, (id, amount): (String, f32)| {
-            let sw = sw.borrow_mut();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(mut health) = sw.world.get::<&mut Health>(entity) {
-                    health.current = (health.current + amount).min(health.max);
-                    return Ok(health.current);
+            let result = {
+                let sw = sw.borrow_mut();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(mut health) = sw.world.get::<&mut Health>(entity) {
+                        health.current = (health.current + amount).min(health.max);
+                        health.current
+                    } else {
+                        0.0f32
+                    }
+                } else {
+                    0.0f32
                 }
-            }
-            Ok(0.0f32)
+            };
+            Ok(result)
         }).map_err(|e| e.to_string())?;
         entity_table.set("heal", heal_fn).map_err(|e| e.to_string())?;
 
         // entity.is_alive(id) -> bool
         let sw = scene_world.clone();
         let is_alive_fn = self.lua.create_function(move |_, id: String| {
-            let sw = sw.borrow();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(health) = sw.world.get::<&Health>(entity) {
-                    return Ok(health.current > 0.0 && !health.dead);
+            let result = {
+                let sw = sw.borrow();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(health) = sw.world.get::<&Health>(entity) {
+                        health.current > 0.0 && !health.dead
+                    } else {
+                        true
+                    }
+                } else {
+                    true
                 }
-            }
-            Ok(true) // entities without health are considered alive
+            };
+            Ok(result)
         }).map_err(|e| e.to_string())?;
         entity_table.set("is_alive", is_alive_fn).map_err(|e| e.to_string())?;
 
         // entity.has_tag(id, tag) -> bool
         let sw = scene_world.clone();
         let has_tag_fn = self.lua.create_function(move |_, (id, tag): (String, String)| {
-            let sw = sw.borrow();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(tags) = sw.world.get::<&Tags>(entity) {
-                    return Ok(tags.0.contains(&tag));
+            let result = {
+                let sw = sw.borrow();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(tags) = sw.world.get::<&Tags>(entity) {
+                        tags.0.contains(&tag)
+                    } else {
+                        false
+                    }
+                } else {
+                    false
                 }
-            }
-            Ok(false)
+            };
+            Ok(result)
         }).map_err(|e| e.to_string())?;
         entity_table.set("has_tag", has_tag_fn).map_err(|e| e.to_string())?;
 
         // entity.add_tag(id, tag)
         let sw = scene_world.clone();
         let add_tag_fn = self.lua.create_function(move |_, (id, tag): (String, String)| {
-            let sw = sw.borrow_mut();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(mut tags) = sw.world.get::<&mut Tags>(entity) {
-                    if !tags.0.contains(&tag) {
-                        tags.0.push(tag);
+            {
+                let sw = sw.borrow_mut();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(mut tags) = sw.world.get::<&mut Tags>(entity) {
+                        if !tags.0.contains(&tag) {
+                            tags.0.push(tag);
+                        }
                     }
                 }
             }
@@ -716,10 +750,12 @@ impl ScriptRuntime {
         // entity.remove_tag(id, tag)
         let sw = scene_world.clone();
         let remove_tag_fn = self.lua.create_function(move |_, (id, tag): (String, String)| {
-            let sw = sw.borrow_mut();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(mut tags) = sw.world.get::<&mut Tags>(entity) {
-                    tags.0.retain(|t| t != &tag);
+            {
+                let sw = sw.borrow_mut();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(mut tags) = sw.world.get::<&mut Tags>(entity) {
+                        tags.0.retain(|t| t != &tag);
+                    }
                 }
             }
             Ok(())
@@ -729,29 +765,44 @@ impl ScriptRuntime {
         // entity.get_tag(id) -> first tag string or nil
         let sw = scene_world.clone();
         let get_tag_fn = self.lua.create_function(move |_, id: String| {
-            let sw = sw.borrow();
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(tags) = sw.world.get::<&Tags>(entity) {
-                    if let Some(first) = tags.0.first() {
-                        return Ok(Some(first.clone()));
+            let result = {
+                let sw = sw.borrow();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(tags) = sw.world.get::<&Tags>(entity) {
+                        if let Some(first) = tags.0.first() {
+                            Some(first.clone())
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
                     }
+                } else {
+                    None
                 }
-            }
-            Ok(None)
+            };
+            Ok(result)
         }).map_err(|e| e.to_string())?;
         entity_table.set("get_tag", get_tag_fn).map_err(|e| e.to_string())?;
 
         // entity.get_tags(id) -> table of all tags
         let sw = scene_world.clone();
         let get_tags_fn = self.lua.create_function(move |lua, id: String| {
-            let sw = sw.borrow();
-            let result = lua.create_table()?;
-            if let Some(&entity) = sw.entity_registry.get(&id) {
-                if let Ok(tags) = sw.world.get::<&Tags>(entity) {
-                    for (i, tag) in tags.0.iter().enumerate() {
-                        result.set(i + 1, tag.clone())?;
+            let tags_vec = {
+                let sw = sw.borrow();
+                if let Some(&entity) = sw.entity_registry.get(&id) {
+                    if let Ok(tags) = sw.world.get::<&Tags>(entity) {
+                        tags.0.clone()
+                    } else {
+                        vec![]
                     }
+                } else {
+                    vec![]
                 }
+            };
+            let result = lua.create_table()?;
+            for (i, tag) in tags_vec.iter().enumerate() {
+                result.set(i + 1, tag.clone())?;
             }
             Ok(result)
         }).map_err(|e| e.to_string())?;
@@ -765,14 +816,19 @@ impl ScriptRuntime {
         // scene.find_by_tag(tag) -> {entity_id1, entity_id2, ...}
         let sw = scene_world.clone();
         let find_by_tag_fn = self.lua.create_function(move |lua, tag: String| {
-            let sw = sw.borrow();
-            let result = lua.create_table()?;
-            let mut idx = 1;
-            for (_entity, (tags, entity_id)) in sw.world.query::<(&Tags, &EntityId)>().iter() {
-                if tags.0.contains(&tag) {
-                    result.set(idx, entity_id.0.clone())?;
-                    idx += 1;
+            let matching_ids = {
+                let sw = sw.borrow();
+                let mut ids = vec![];
+                for (_entity, (tags, entity_id)) in sw.world.query::<(&Tags, &EntityId)>().iter() {
+                    if tags.0.contains(&tag) {
+                        ids.push(entity_id.0.clone());
+                    }
                 }
+                ids
+            };
+            let result = lua.create_table()?;
+            for (i, id) in matching_ids.iter().enumerate() {
+                result.set(i + 1, id.clone())?;
             }
             Ok(result)
         }).map_err(|e| e.to_string())?;
@@ -781,17 +837,22 @@ impl ScriptRuntime {
         // scene.find_by_tags(tag1, tag2, ...) -> entities with ALL specified tags
         let sw = scene_world.clone();
         let find_by_tags_fn = self.lua.create_function(move |lua, tags_arg: LuaMultiValue| {
-            let sw = sw.borrow();
             let required_tags: Vec<String> = tags_arg.into_iter().filter_map(|v| {
                 if let LuaValue::String(s) = v { Some(s.to_string_lossy().to_string()) } else { None }
             }).collect();
-            let result = lua.create_table()?;
-            let mut idx = 1;
-            for (_entity, (tags, entity_id)) in sw.world.query::<(&Tags, &EntityId)>().iter() {
-                if required_tags.iter().all(|rt| tags.0.contains(rt)) {
-                    result.set(idx, entity_id.0.clone())?;
-                    idx += 1;
+            let matching_ids = {
+                let sw = sw.borrow();
+                let mut ids = vec![];
+                for (_entity, (tags, entity_id)) in sw.world.query::<(&Tags, &EntityId)>().iter() {
+                    if required_tags.iter().all(|rt| tags.0.contains(rt)) {
+                        ids.push(entity_id.0.clone());
+                    }
                 }
+                ids
+            };
+            let result = lua.create_table()?;
+            for (i, id) in matching_ids.iter().enumerate() {
+                result.set(i + 1, id.clone())?;
             }
             Ok(result)
         }).map_err(|e| e.to_string())?;

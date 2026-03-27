@@ -7,3 +7,6 @@ SLANG_DIR = { value = "vendor", relative = true }
 # Add vendor/lib to the runtime library search path (rpath) so the binary
 # can find libslang-compiler and other SLANG shared libraries at runtime.
 rustflags = ["-C", "link-arg=-Wl,-rpath,/Users/mollila1/Documents/src/nAIVE/vendor/lib"]
+
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
