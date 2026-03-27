@@ -119,7 +119,7 @@ entities:
         scale: [1.5, 4.5, 1.5]
       mesh_renderer:
         mesh: assets/meshes/wendigo_creature.glb
-        material: assets/materials/default.yaml
+        material: assets/materials/inferno_demon.yaml
       health:
         max: 200
       collider:
