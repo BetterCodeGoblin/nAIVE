@@ -15,3 +15,4 @@ assets/audio/
 # Keep GLBs embedded in demo binary
 !project/assets/meshes/meshy_car.glb
 !project/assets/meshes/submarine.glb
+/vendor-windows
