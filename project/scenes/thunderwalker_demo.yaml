@@ -41,7 +41,7 @@ entities:
       transform:
         position: [0, 2, 10]
       mesh_renderer:
-        mesh: assets/meshes/seeker_warrior.glb
+        mesh: assets/meshes/ranger_seeker.glb
         material: assets/materials/blue.yaml
       camera:
         fov: 75
