@@ -111,24 +111,26 @@ entities:
         range: 22.0
 
   # ── Wendigo (boss enemy) ──────────────────────────────────────────────────
-  - id: wendigo
-    tags: [enemy]
-    components:
-      transform:
-        position: [0, 2, -28]
-        scale: [1.5, 4.5, 1.5]
-      mesh_renderer:
-        mesh: assets/meshes/wendigo_creature.glb
-        material: assets/materials/inferno_demon.yaml
-      health:
-        max: 200
-      collider:
-        shape: box
-        half_extents: [0.75, 2.25, 0.75]
-      rigid_body:
-        body_type: fixed
-      script:
-        source: logic/wendigo_demo.lua
+  # DISABLED: Asset removed to reduce build size
+  # Uncomment and restore wendigo_creature.glb from git history to re-enable
+  # - id: wendigo
+  #   tags: [enemy]
+  #   components:
+  #     transform:
+  #       position: [0, 2, -28]
+  #       scale: [1.5, 4.5, 1.5]
+  #     mesh_renderer:
+  #       mesh: assets/meshes/wendigo_creature.glb
+  #       material: assets/materials/inferno_demon.yaml
+  #     health:
+  #       max: 200
+  #     collider:
+  #       shape: box
+  #       half_extents: [0.75, 2.25, 0.75]
+  #     rigid_body:
+  #       body_type: fixed
+  #     script:
+  #       source: logic/wendigo_demo.lua
 
   # ── Forest treeline — north boundary (behind Wendigo) ────────────────────
   - id: tree_n01
