@@ -427,59 +427,62 @@ Spirit Marks reset each run. Persistent meta-progression is tracked separately (
 ### The Hunt Loop
 
 ```
-PREPARE → TRACK → ENGAGE → HARVEST → CRAFT → REST → ESCALATE
+PREPARE → TRACK → INTERPRET → ENGAGE → HARVEST → TELL → REST → ESCALATE
 ```
 
-**Prepare:** At run start and at each campfire, the Seeker organizes their loadout: equipped weapon, 3 consumable slots, equipped armor set, active Spirit Ability (max 2 slots). Resources from previous encounter carry forward within the run.
+**Prepare:** At run start and at each campfire, the Seeker organizes their loadout: equipped weapon, 3 consumable slots, equipped armor set, active invocations, and one chosen combat emphasis. Preparation is not just numerical optimization, it is deciding what kind of answer the Seeker intends to bring into the next encounter.
 
-**Track:** Each encounter begins with a tracking phase — following signs (prints, broken vegetation, disturbed water, the specific environmental changes each creature causes) to the monster's current position. Good tracking reveals weaknesses and behavior cues. Poor tracking (rushing) means approaching from a disadvantaged angle.
+**Track:** Each encounter begins with a tracking phase, following signs such as prints, broken vegetation, disturbed water, weather changes, animal silence, and residue left by spirit influence. Good tracking reveals not just location, but behavior logic.
 
-**Engage:** The actual combat encounter. Monster Hunter-paced — long, deliberate, reading patterns and finding windows. Typical encounter: 8-20 minutes depending on preparation and player skill.
+**Interpret:** Before the real fight begins, the player reads the being. What kind of force is it. What does it punish. What pattern is it repeating. This is the layer that separates Thunderwalker from pure action games. The Seeker is trying to understand the encounter's story before forcing the issue.
 
-**Harvest:** After a kill (or a failed hunt where the creature retreats), the Seeker has 90 seconds to harvest parts from the carcass. Number of harvest nodes depends on how cleanly the kill was executed. Damage to specific body parts during combat increases harvest yield from those parts (cutting the tail = guaranteed tail material).
+**Engage:** Combat is a call-and-response duel. The creature declares intent through posture, sound, weather, arena shifts, and attack windup. The Seeker responds with the right family of actions, sometimes by direct violence, sometimes by grounding, baiting, enduring, or breaking ritual pressure.
 
-**Craft:** At campfires and sacred sites, combine harvested materials into new armor pieces, weapon upgrades, or consumables. The crafting interface is fast — no mini-game. Recipes are discovered by examining monsters during combat (Spirit Sight reveals available recipe components).
+**Harvest:** After a kill, retreat, or resolved encounter, the Seeker has a limited time to gather parts, signs, and traces. Clean, respectful hunts produce better rewards. Reckless, panicked fights still produce materials, but less insight.
 
-**Rest:** At campfire, restore stamina segments, restock one medicine use, burn Spirit Marks for progression upgrades. Optional: review Codex entries for the creatures encountered.
+**Tell:** At campfires and sacred sites, the Seeker reflects on the hunt. This is where Codex lore, interpretation notes, unlocked responses, and story threads come together. The game should feel like the player is carrying forward lessons, not just loot.
 
-**Escalate:** Each completed hunt increases the run's threat tier, unlocking harder variants, elite creatures, and eventually the Elder encounter that closes the run.
+**Rest:** Restore stamina segments, recover medicine, bind one new lesson into the run, and decide whether to keep pressing forward. Rest is both mechanical recovery and narrative reset.
+
+**Escalate:** Each resolved hunt increases the run's intensity, unlocking harder variants, stronger spirit weather, stricter encounter rules, and eventually the Elder Hunt that closes the run.
 
 ### Roguelike Run Structure
 
 A run consists of:
 
-1. **Approach** — Brief traversal scene, world-building, optional gathering
-2. **Three Hunt Encounters** — Escalating difficulty, procedurally assigned from the active biome's roster
-3. **Sacred Site** — Guaranteed rest point between encounter 2 and 3; crafting opportunity, lore unlock, Spirit Bonding if eligible
-4. **Elder Hunt** — The run-closing encounter. Always a named, full-difficulty creature. Success = run complete.
+1. **Approach** — Brief traversal, gathering, camp setup, early signs
+2. **Two to Three Hunts** — Escalating encounters shaped by the active biome's roster and spiritual state
+3. **Sacred Site or Story Site** — Guaranteed reflection point between major hunts, used for invocation swaps, story interpretation, or covenant choices
+4. **Elder Hunt** — The run-closing encounter, always a named, full-difficulty creature with a strong call-and-response identity
 
-Total run time: 45-90 minutes at expected skill level.
+Total run time target: 35-60 minutes for the first full slice, expandable later.
 
 ### What Persists (Between Runs)
 
-- **Codex entries** — All lore and creature knowledge
-- **Recipes learned** — Any crafting recipe discovered in a run is permanently unlocked
-- **Spirit Bonds** — Once formed with a creature, the associated Spirit Ability is permanently available
-- **Lineage unlocks** — New lineage options unlocked through specific achievement conditions
-- **Scar patterns** — Cosmetic records of significant moments
-- **World Map progress** — Encountering a biome for the first time unlocks it on the world map
+- **Codex entries** — lore, observed patterns, and cultural notes
+- **Responses learned** — permanently unlocked Medicine, Trick, or Trial options earned through use and discovery
+- **Spirit Bonds** — if retained, framed less as spell collecting and more as relationship-based invocations
+- **Lineage unlocks** — new Seeker origins or story lenses
+- **Scar patterns** — cosmetic memory of major successes or failures
+- **Story Threads** — fragments of teachings, warnings, and remembered encounters
+- **World Map progress** — biome knowledge and notable sites
 
 ### What Resets (Each Run)
 
-- All harvested materials
-- All crafted gear (except one "heirloom" item designated at end of run — you carry one piece forward, degraded)
-- Spirit Marks and within-run progression
-- Consumable stocks
-- Active Spirit Ability slots (you must re-earn them each run via Spirit Marks)
+- most harvested materials
+- crafted temporary gear and consumables
+- Presence modifiers gained during the run
+- situational buffs, temporary vows, and challenge conditions
+- active encounter-specific response loadout refinements
 
 ### Meta-Progression System
 
-The **Keeper's Fire** — a meta-hub between runs — represents accumulated knowledge and preparation:
+The **Keeper's Fire** remains the meta-hub between runs, but it should feel less like a stat kiosk and more like an oral memory place.
 
-- **Story threads** — short vignette sequences unlocked by completing specific run conditions (e.g., "Hunt the Wendigo without using fire" unlocks a Codex story about the first hunter who faced a Wendigo)
-- **Wisdom Tokens** — earned for completing runs, dying in notable ways, or achieving first kills; spent to unlock new starting consumable recipes
-- **Reputation** — abstract measure of how the Seeker is regarded in the spirit world; affects passive bonuses at sacred sites (higher reputation = better bonuses)
-- **Challenger Seals** — optional hard-mode modifiers that, when completed, unlock cosmetic rewards and advanced story content
+- **Story Threads** — short scenes, teachings, remembered warnings, and post-hunt reflections unlocked through specific encounter behavior
+- **Wisdom Tokens** — earned for meaningful play, such as reading a boss correctly, surviving with composure, or resolving a hunt through a difficult response path
+- **Reputation** — how the Seeker is regarded among spirits, ancestors, and communities, affecting later encounter tone and sacred-site options
+- **Challenger Seals** — optional hard-mode vows with clearer narrative meaning than generic skull modifiers
 
 ---
 
@@ -487,114 +490,231 @@ The **Keeper's Fire** — a meta-hub between runs — represents accumulated kno
 
 ### Core Feel
 
-Combat in Thunderwalker is slow compared to most action games and faster than it looks. Every action has weight. Dodges cost resources. Healing is slow. The player is not fast enough to beat a Thunderbird by button-mashing. The player must read the monster.
+Combat in Thunderwalker should feel deliberate, readable, and slightly uncanny, closer to an N64-era boss adventure in silhouette clarity and strong pattern identity than to modern animation-heavy action sludge.
 
-Target frame rate: 60fps. Combat resolution on the nAIVE engine using its entity/component system for hitbox management.
+The player is not meant to win through long combo strings or pure dodge mastery. The player wins by:
+- reading the creature
+- preserving composure
+- answering the correct pattern with the correct response family
+- choosing when to attack and when to interpret
 
-### Weapon Types
+This keeps the combat connected to storytelling and the Seeker's medicine-person / hunter role.
 
-#### 5.1 Spirit Lance
+### Combat Pillars
 
-**Feel:** Long-range poke + counter-attack. The most technically demanding weapon; rewards positional mastery.
+#### 5.1 Call and Response
 
-**Moveset:**
-- *Thrust* — Fast, long-range poke. Low damage per hit, high hit rate.
-- *Wide Sweep* — Horizontal arc, good for multiple targets or large bodies
-- *Ground Anchor* — Drives the lance into terrain; briefly immobilizes the Seeker but creates a "tether" — the next hit from the monster triggers an automatic counter-thrust dealing 2x damage
-- *Vault Strike* — Uses the lance as a pole vault to launch into a high-damage overhead strike
+Every major encounter is structured like a conversation.
 
-**Spirit Infusion:** Charges with spirit energy during combo sequences; at full charge, *Spirit Burst* releases a wave of energy in a line.
+The creature makes a **Call** through:
+- body language
+- voice or sound design
+- weather or arena change
+- movement rhythm
+- territorial behavior
+- spirit pressure
 
-**Best against:** Thunderbird (ground anchor counters its dive), Chenoo (vault strike bypasses Stone Skin on overhead)
+The Seeker gives a **Response** through action.
+
+Examples:
+- A Wendigo emits hunger pressure and converges through fear. The correct answer is not endless rolling, but grounding, spacing, then punishing overreach.
+- A Thunderbird charges the arena with storm force. The correct answer is to anchor, endure, and counter at the moment of discharge.
+- Mishipeshu denies safe space. The answer is to reposition intelligently, break its confidence, and force it out of fluid control.
+
+This is the signature identity of the game.
+
+#### 5.2 Three Response Families
+
+All meaningful combat options belong to one of three families:
+
+##### Medicine
+Used to restore balance, clear harmful influence, ground space, and protect the Seeker.
+
+Examples:
+- ash circle
+- cleansing breath
+- smoke charm
+- ward mark
+- spirit anchor
+
+Use Medicine against:
+- fear effects
+- curses
+- confusion
+- frenzy pressure
+- corruption fields
+
+##### Trick
+Used to misdirect, lure, out-position, and expose beings that rely on dominance or predation.
+
+Examples:
+- false trail
+- decoy rattle
+- bait toss
+- echo step
+- lure mark
+
+Use Trick against:
+- ambushers
+- chargers
+- shapeshifters
+- territorial predators
+- enemies that overcommit when teased into motion
+
+##### Trial
+Used to stand ground, answer a challenge, and prove resolve through timing and courage.
+
+Examples:
+- challenge stance
+- brace counter
+- vow strike
+- precise interrupt
+- ritual parry
+
+Use Trial against:
+- duelists
+- storm beings
+- prideful guardians
+- monsters that respect endurance more than evasiveness
+
+This system gives combat a narrative grammar without turning it into a card game.
+
+### Primary Combat Resource: Presence
+
+Replace the generic spirit-resource emphasis with **Presence** as the main expressive resource.
+
+Presence is the Seeker's composure, authority, and spiritual steadiness inside the encounter.
+
+You lose Presence by:
+- panic dodging
+- taking fear or confusion hits
+- violating encounter logic
+- overusing strong invocations without setup
+- being cornered or spiritually overwhelmed
+
+You gain Presence by:
+- correct reads
+- clean counters
+- holding ground when appropriate
+- executing the right response at the right time
+- resolving encounter mechanics without flinching
+
+Presence fuels:
+- Medicine responses
+- Trick maneuvers
+- Trial counters
+- phase-control invocations
+- certain finishers and story-specific interactions
+
+This is more thematic than mana and makes the player's emotional state part of the system.
+
+### Player Verbs
+
+The player verb set should stay intentionally small and expressive:
+- light attack
+- heavy attack
+- dodge step
+- sidestep
+- brace / guard
+- invoke Medicine
+- invoke Trick
+- invoke Trial
+- interact with sign, object, or ground mark
+
+The depth comes from encounter design, not move-list bloat.
+
+### Weapon Identity
+
+Weapons should reinforce response style rather than become combo encyclopedias.
+
+#### 5.3 Spirit Lance
+
+**Role:** Reach, anchoring, interception.
+
+**Fantasy:** The hunter who controls distance and makes the creature regret forward commitment.
+
+**Key moves:**
+- *Thrust* — safe poke and spacing tool
+- *Wide Sweep* — broad control vs circling targets
+- *Ground Anchor* — plant into earth to enable a Trial-style counter
+- *Vault Strike* — high-commitment punish on exposed targets
+
+**Best use:** Trial-heavy players, storm encounters, large-beast pattern punishment.
+
+#### 5.4 Storm Bow
+
+**Role:** Read, mark, provoke, punish from intent rather than spam.
+
+**Fantasy:** The Seeker who studies and tags the being before committing to damage.
+
+**Key moves:**
+- *Standard Shot* — low-commitment pressure
+- *Charged Shot* — elemental or utility response based on the current fight
+- *Sight Mark* — reveals or highlights true vulnerability state
+- *Thunder Shot* — brief interruption and rhythm break
+
+**Best use:** track-heavy players, aerial or elusive creatures, readable boss phases.
+
+#### 5.5 Bone Club
+
+**Role:** Space denial, brace, break, and certainty.
+
+**Fantasy:** The Seeker who answers force with rooted force.
+
+**Key moves:**
+- *Overhead Smash* — high commitment, high consequence punish
+- *Horizontal Swing* — reclaim close space
+- *Ground Wave* — area denial and rhythm disruption
+- *Counter Brace* — absorb impact and return it
+
+**Best use:** stubborn enemies, armored phases, Trial play, breaking false confidence.
+
+#### 5.6 Medicine Blade
+
+**Role:** Cleansing, tagging, interrupting, and precision expression.
+
+**Fantasy:** The Seeker who works close, reads corruption, and answers it cleanly.
+
+**Key moves:**
+- *Quick Slash* — tempo control
+- *Purification Strike* — anti-corruption punish
+- *Compound Cut* — layered effect application
+- *Seal Strike* — marks a being to suppress a dangerous behavior temporarily
+
+**Best use:** corrupted or deceptive enemies, Medicine-heavy players, close-quarters technical play.
+
+### Dodge, Brace, and Counter
+
+**Dodge Step:** Strong i-frames, real commitment, punishable when spammed. Use to cross danger, not to erase it.
+
+**Sidestep:** Short, cheap repositioning with no safety blanket. Useful for N64-style readable spacing and quick angle correction.
+
+**Brace:** The key defensive verb. Some attacks should be braced, not rolled. This helps break the modern-action habit of making dodge the answer to everything.
+
+**Counter Window:** The best damage windows come after a correct read, not after arbitrary combo extender prompts.
+
+### Status and Pressure States
+
+Avoid too many RPG debuffs. Use a tight set of states with strong narrative meaning:
+- **Fear** — reduced Presence gain, shaky movement timing
+- **Chilled** — slower recovery, heavier spacing mistakes
+- **Confused** — reduced read clarity, false prompts, audio deception
+- **Marked** — the creature has committed to you or you have sealed it into a punishable state
+- **Grounded** — storm or spirit pressure reduced, safer to brace
+- **Exposed** — brief vulnerability after a correct response
+
+### Why it stays mechanically interesting
+
+The interesting part is not stat complexity. It is that the same boss can be approached through:
+- Medicine answers
+- Trick answers
+- Trial answers
+- different weapons
+- different levels of narrative understanding
+
+That creates story-shaped mastery.
 
 ---
-
-#### 5.2 Storm Bow
-
-**Feel:** Ranged precision with elemental ammo management. Highest skill ceiling; most information-gathering tool.
-
-**Moveset:**
-- *Standard Shot* — Fast, moderate damage, infinite ammo
-- *Charged Shot* — Hold to charge; fires one of three elemental ammo types (Fire, Thunder, Cold) depending on charge duration
-- *Spirit Sight Shot* — Brief draw-back that marks an enemy's weak point on release; marked targets take +20% damage for 8 seconds
-- *Thunder Shot* — Special ability (costs 1 Spirit charge); AoE stagger, effective against flying enemies
-
-**Spirit Infusion:** Elemental ammo types are gained from Spirit Bonds with elemental creatures.
-
-**Best against:** Wendigo (Thunder Shot stagger), Thunderbird (ground-type charged shot), Misi-ginebig (lightning arrows)
-
----
-
-#### 5.3 Bone Club
-
-**Feel:** Slow, devastating, breaks things. The highest per-hit damage in the game. Brutally simple; hard to master.
-
-**Moveset:**
-- *Overhead Smash* — Massive damage, huge telegraph, can break armor/plate on monsters
-- *Horizontal Swing* — Wide arc, staggers smaller creatures
-- *Ground Wave* — Slams the ground, sends a shockwave along the terrain surface
-- *Counter Brace* — Planting the club and bracing; if hit during brace, the Seeker takes half damage and the monster bounces back, creating a free-attack window
-
-**Spirit Infusion:** Each hit builds a resonance meter; at max resonance, next hit deals 3x damage with a shockwave AoE.
-
-**Best against:** Chenoo (percussive attacks bypass Stone Skin), Bear Walker (bone club impacts deal 1.5x in bear-form), Skinwalker (break Form Shift armor)
-
----
-
-#### 5.4 Medicine Blade
-
-**Feel:** Fast, technical, synergizes with Spirit Abilities and consumable chemistry. Highest ceiling for players who understand the full system.
-
-**Moveset:**
-- *Quick Slash* — Fastest attack in the game; low individual damage, high hit rate
-- *Purification Strike* — Charged slash that deals bonus damage to corrupted/cursed beings; cleanses Debuffs on the Seeker if it connects
-- *Compound Cut* — Multi-hit sequence; each hit applies the current infusion effect (requires medicine pouch resource)
-- *Seal Strike* — Rare use; leaves a *mark* on the monster that disrupts Spirit Abilities on the target for 10 seconds
-
-**Spirit Infusion:** Can hold multiple infusion types simultaneously (up to 2); switching is free but costs a quick animation.
-
-**Best against:** Deer Woman (purification bonus), Skinwalker (purification bonus), Bear Walker (medicine scar targeting)
-
----
-
-### Dodge/Parry System
-
-**Dodge:** Directional, costs 1 stamina segment. Has a generous i-frame window in the middle of the animation. Dodge timing is monster-specific — the Deer Woman's attacks require a shorter-interval dodge than the Chenoo's telegraphy. Learning dodge timing for each monster is core skill expression.
-
-**Sidestep:** A shorter, faster directional move with no i-frames but no stamina cost. Used for repositioning rather than invincibility.
-
-**Parry:** Weapon-specific. Only available on the Medicine Blade (active parry) and Spirit Lance (Ground Anchor auto-parry). Successful parry creates a large free-attack window and staggers the monster. Failed parry (wrong timing) removes stamina immediately and leaves the Seeker open.
-
-**Counter Window:** After a successful dodge (rolling through an attack during i-frames), there is a 0.5-second window for a *Counter Strike* — a fast, bonus-damage attack that does not cost stamina. Learning to consistently convert dodges into counter strikes is the skill gap between good and great play.
-
-### Spirit Abilities
-
-Spirit Abilities are unlocked by completing a Spirit Bond with a creature (requires a rare drop from that creature — see Bestiary). They are powerful, situational, and cost Spirit resource.
-
-**Examples:**
-
-| Ability | Source | Effect | Spirit Cost |
-|---------|--------|--------|-------------|
-| Wendigo Hunger | Wendigo | AoE frost burst around Seeker; inflicts Chill on all nearby enemies | 2 |
-| Thunderbird Dive | Thunderbird | Seeker launches into air and dive-strikes; unblockable, high stagger | 3 |
-| Mishipeshu Step | Mishipeshu | 2-second invisibility; next attack deals 2x damage from stealth | 2 |
-| Horned Surge | Misi-ginebig | Projectile water/copper lance; penetrates monster armor | 2 |
-| Bear Form | Bear Walker | Temporary +50% HP and damage; Seeker cannot use other abilities during | 4 |
-| Deer Phase | Deer Woman | Brief compulsion aura; enemy attacks re-target away from Seeker for 4s | 2 |
-| Storm Feather | Thunderbird | Passive (always active once bonded): movement speed +10%, dodge costs -0.5 stamina | — |
-
-Maximum 2 Spirit Ability slots active per run (expanded to 3 at high Reputation meta-level).
-
-### Stamina / Spirit Resource Management
-
-**Stamina:** 5 segments baseline (6 with Walks-in-Thunder lineage). Regenerates completely in 4 seconds when not performing stamina-costly actions. Attacks do not cost stamina — only dodges, some special weapon moves, and sprinting. Running out of stamina means no dodges, which is often death.
-
-**Spirit Resource:** Separate bar, fills passively during combat (0.1 per second) and actively by landing strikes in combo sequences. Maximum 6 Spirit points. Abilities cost 2-4. Regeneration is interrupted by taking damage (1-second pause). Hoarding spirit charges for critical moments is a core strategic decision.
-
-**Interaction:** Using a Spirit Ability during a stamina-depleted state does not restore stamina. There is no shortcut out of the resource hole — manage both or pay consequences.
-
----
-
 ## 6. World & Biomes
 
 ### Overview
@@ -852,124 +972,126 @@ Spirit Bonding represents the Seeker forming a relationship with the essence of 
 
 ### Visual Style
 
-**Painted/Illustrated — not photorealistic.**
+**Stylized, readable, N64-ish in spirit, not retro as a gimmick.**
 
-The primary reference is the visual tradition of ledger art — the Plains tradition of narrative painting on flat surfaces — and the graphic power of petroglyphs and rock art as pure image-making. This doesn't mean the game looks like flat 2D art; it means the color, shape, and outline language comes from those traditions rather than from photorealistic rendering.
+The visual target is not literal Nintendo 64 rendering. The target is the design clarity that era often had at its best:
+- strong silhouettes
+- bold color separation
+- compact readable arenas
+- instantly legible enemy states
+- mechanic-first presentation
+
+Pair that with painted texture sensibility, ledger-art influence, and petroglyph-inspired shape language.
 
 Specific style notes:
-- **Outlines are present and intentional** — creatures have a strong silhouette read first, detail second
-- **Color is expressive, not literal** — the Wendigo's frost isn't gray-blue because ice is that color; it's gray-blue because cold and hunger and isolation are that color
-- **Light is used as a narrative tool** — sacred sites glow in specific ways; corrupted creatures have a specific quality of wrong light
-- **Scale is exaggerated** — creatures are larger than realistic scale to communicate mythological weight; the Thunderbird fills the sky because that's what a Thunderbird is
+- **Silhouette comes first** — every monster should read from a distance in one glance
+- **Materials are simplified** — broad value groups, not noisy realism
+- **Color is expressive** — hues communicate spiritual state, danger, mood, and elemental change
+- **Animation readability matters more than fidelity** — clear telegraphs beat hyper-detailed motion
+- **Arenas are stage-like** — shaped to support memory, rhythm, and call-and-response encounters
+
+This gives the project a distinct identity and keeps combat readable.
+
+### N64-ish Presentation Principles
+
+- Chunky, memorable forms over micro-detail
+- High contrast boss states
+- Strong environmental landmarking
+- Screen-readable effects with disciplined particles
+- Camera composition that supports lock-on and arena learning
+- Stylized UI motifs instead of busy overlays
+
+The point is not nostalgia for its own sake. The point is mechanical honesty.
 
 ### Color Palette Per Biome
 
 | Biome | Primary | Secondary | Accent | Feel |
 |-------|---------|-----------|--------|------|
 | Great Plains | Ochre, burnt sienna | Sky blue, sage | Storm grey | Vast, exposed |
-| Northern Forest | Deep pine, shadow blue | Snow white, iron grey | Amber (fire, aurora) | Dense, cold, watching |
-| Desert Southwest | Sandstone red, canyon orange | Turquoise, bone | Deep shadow black | Ancient, spatial |
-| Pacific Coast | Rainforest green, fog grey | Cedar brown, ocean blue | Salmon pink (fish run) | Layered, alive |
+| Northern Forest | Deep pine, shadow blue | Snow white, iron grey | Amber, aurora green | Dense, cold, watching |
+| Desert Southwest | Sandstone red, canyon orange | Turquoise, bone | Deep shadow black | Ancient, spacious |
+| Pacific Coast | Rainforest green, fog grey | Cedar brown, ocean blue | Copper, salmon pink | Layered, alive |
 | Arctic Tundra | Ice white, frost blue | Midnight grey | Aurora green/violet | Absolute, inhuman |
 
-Creature colors are distinct from their biomes — they should be immediately readable against their environment. The Wendigo is bone-white against the Northern Forest's greens. Mishipeshu is copper-bright against the dark lake water.
+Creature palettes should pop against their home biome without feeling divorced from it.
 
 ### UI Philosophy
 
-**Diegetic where possible.**
+**Readable, restrained, partly diegetic.**
 
-- Health is represented by a beaded band at the bottom of screen — beads disappear with damage, are added with healing. No numbers by default.
-- Stamina segments are visualized as breath (visual puffing, rate of movement, slight vignette at exhaustion)
-- Spirit resource is a small painted symbol that fills with color; it does not require reading
-- Monster health has no visible bar — behavior and sound cues tell the Seeker when a creature is weakening. This is deliberate and consistent with the hunting context: you read the animal, not a meter.
+- Health is a beaded or marked band, not a giant fantasy HUD slab
+- Presence is shown through a clean icon, color intensity, and character-state feedback
+- Stamina is shown through breath, posture, and a minimal segmented readout
+- Enemy health should be minimal or absent, favoring behavior tells and visible phase language
 
-**HUD minimalism:** The screen should, in a screenshot, look like a painting of the encounter — not an interface with a game embedded. Information is present but woven in.
+The player should feel like they are reading the encounter, not spreadsheets.
 
-**Font:** A custom letterform drawn from Indigenous visual language principles — clean, strong, no serifs, no grunge. Not a pastiche of any specific tradition's writing system.
+### Sound Design Principle
 
-**Sound design principle:** Environmental audio is real (wind, water, specific animal sounds of each biome). Monster audio is designed; the Wendigo's breath, the Thunderbird's wing-thunder, the crack of the Chenoo's stone joints are sound designed from scratch. No "generic Native American soundtrack" — the music system is reactive ambient, driven by tension state, not looping background tracks.
-
----
-
-## 10. nAIVE Engine Tier Mapping
-
-### Current Capability: Tier 3, v0.1.18
-
-Based on the nAIVE engine's current architecture (Rust core, YAML scene definition, Lua scripting):
-
-#### Buildable NOW (v0.1.18)
-
-**Scene System:**
-- Static biome scenes defined in YAML with entity placement, terrain objects, traversal zones
-- Weather state machine (basic: clear/storm/night — implemented as flags affecting Lua behavior scripts)
-- Campfire entity with interaction zone, inventory management, rest state trigger
-
-**Entity/Combat:**
-- Player entity with stamina segments, HP segments, equipped weapon slot, Spirit resource float
-- Monster entity with HP, phase triggers (percentage-based), basic state machine (patrol → alert → attack → retreat)
-- Hitbox system for melee attacks (range + angle check)
-- Projectile entities (Storm Bow arrows)
-- Dodge i-frame window via state + timer
-
-**Lua Scripting:**
-- Monster behavior scripts: patrol loops, attack pattern selection, phase transitions
-- Crafting recipes as data (YAML) + validation logic (Lua)
-- Spirit Sight reveal mechanic (highlight entity components on keypress + timer)
-- Harvest window: timed loop with node interaction
-
-**Audio:**
-- Positional audio for entities
-- Ambient state tracks (tension level mapping)
-- Monster sound cues
-
-**Buildable NOW — MVP scope:**
-- One biome (Northern Forest)
-- One monster with full phase 2 behavior (Wendigo — best fit for current state machine complexity)
-- Spirit Lance weapon with full moveset
-- Basic crafting (2 recipes)
-- Spirit Sight ability
-- Harvest window
-- Codex entry display
+Environmental sound stays grounded. Creature sound is authored and mythic. Music should support tension and memory, not flatten everything into generic "tribal" wallpaper. Rhythm should matter in combat cues, but without turning the whole game into a rhythm game.
 
 ---
+## 10. UE5 Prototype Mapping
 
-#### Needs Future Tiers
+### Current Goal
 
-**Tier 4 (estimated):**
-- Procedural biome layout generation (terrain placement, traversal path generation)
-- Full run structure (multiple encounters, Sacred Site progression logic)
-- 3+ monsters with full behavior trees
-- All 4 weapon types with full movesets
-- Heirloom persistence system
-- Spirit Bonding system
+Thunderwalker's next practical step is a UE5 prototype that proves the combat language and encounter readability before any large-scale content push.
 
-**Tier 5 (estimated):**
-- Full bestiary (8 creatures, all biomes)
-- Meta-progression (Keeper's Fire, Wisdom Tokens, Reputation)
-- Full weather system with all modifiers
-- Full run procedural generation
-- All crafting recipes
-- Sound design complete
+That prototype should prioritize:
+- one compact biome slice
+- one fully legible boss encounter
+- one small player moveset
+- one Presence loop
+- one Medicine / Trick / Trial implementation path
+- one campfire reflection flow
 
-**Tier 6+ (estimated):**
-- Full art pass (painted/illustrated visual style at production quality)
-- Full Codex with cultural review
-- All Spirit Bonds and abilities
-- Controller support, accessibility options
-- Save/load system for meta-progression
-- Performance optimization for full encounter complexity
+### Build First in UE5
 
----
+**Scene / Arena:**
+- one Northern Forest combat bowl with 2-3 strong landmarks
+- one campfire edge space for prep and reflection
+- one encounter arena that supports circling, anchoring, and visibility shifts
 
-### MVP Demo Scope (Tier 3 Deliverable)
+**Player:**
+- light attack
+- heavy attack
+- dodge step
+- sidestep
+- brace
+- 3 response actions mapped to Medicine / Trick / Trial
+- Presence resource and one basic recovery rule
 
-A **playable 3-5 minute demo scene** that demonstrates:
-- Core combat loop (attack, dodge, Spirit Sight, harvest)
-- One monster fight through Phase 1 and Phase 2
-- One craft at campfire
-- One Spirit Ability use
+**Enemy:**
+- Wendigo as first full boss
+- clear call states
+- phase transition at 40% HP
+- fear pressure and convergence behavior
+- at least one attack that wants bracing, one that wants repositioning, and one that wants a ritual response
 
-See Section 11 for full specification.
+**Systems:**
+- lock-on or soft-target support
+- readable enemy telegraphs
+- simple codex/log note after fight
+- one harvest interaction
+- one campfire between attempts
+
+### Prototype Success Criteria
+
+The first UE5 slice succeeds if it proves:
+1. the combat is readable at a glance
+2. Presence changes player behavior meaningfully
+3. Medicine / Trick / Trial feels like a real combat language
+4. the boss feels like a story-shaped duel, not an HP sponge
+5. the N64-ish presentation direction improves clarity instead of feeling cheap
+
+### Later Expansion
+
+After the first slice works, expand into:
+- more biomes
+- more bosses with different response emphases
+- lineage differentiation
+- story thread persistence
+- richer campfire / keeper's fire structure
 
 ---
 
@@ -977,241 +1099,70 @@ See Section 11 for full specification.
 
 ### Demo Title: "First Hunt — The Wendigo at Frozen Creek"
 
+**Engine target:** UE5 prototype first
 **Biome:** Northern Forest (winter)
-**Monster:** Wendigo (full Phase 1 + Phase 2)
-**Expected Run Time:** 3-5 minutes
-**Player Weapon:** Spirit Lance
+**Monster:** Wendigo
+**Expected session time:** 5-10 minutes
+**Recommended first weapon:** Spirit Lance
 
 ---
 
-### Scene Layout (YAML Structure)
+### Demo Goals
 
-```yaml
-scene:
-  id: demo_frozen_creek
-  biome: northern_forest
-  weather: blizzard_approach  # starts clear, transitions to blizzard at 40% monster HP
-  time_of_day: dusk
+This demo is not trying to prove the entire roguelike. It is trying to prove the combat identity.
 
-  terrain:
-    - id: creek_bed
-      type: frozen_water
-      passable: true
-      notes: "Ice cracks if Wendigo uses Ground Pound within 3 units"
-    - id: treeline_north
-      type: dense_forest
-      passable: false
-      notes: "Wendigo patrol boundary"
-    - id: treeline_south
-      type: dense_forest
-      passable: false
-      notes: "Player spawn side"
-    - id: campfire_site
-      type: clearing
-      position: [0, 0]
-      radius: 8
-      notes: "Starting campfire — interactable for rest/craft"
-    - id: approach_path
-      type: forest_trail
-      notes: "Tracking phase path — Wendigo prints visible here"
+The player should leave understanding:
+- this is a readable mythic duel
+- the Seeker wins by correct response, not mashing
+- Presence matters
+- the boss is telling a story through behavior
 
-  entities:
-    - id: player_seeker
-      type: player
-      position: [0, -15]
-      weapon: spirit_lance
-      consumables:
-        - medicine_pouch: 1
-        - torch: 2
-      spirit_slots: 1  # demo only unlocks one
-      
-    - id: wendigo_01
-      type: monster
-      subtype: wendigo
-      position: [0, 30]
-      phase: 1
-      
-    - id: campfire_01
-      type: campfire
-      position: [0, -5]
-      interactable: true
-      craft_recipes:
-        - recipe_id: cold_ward_wrap  # basic armor component
-      
-    - id: harvest_node_common_01
-      type: harvest_node
-      linked_to: wendigo_01
-      material: wendigo_rib_shard
-      
-    - id: harvest_node_rare_01
-      type: harvest_node
-      linked_to: wendigo_01
-      material: frost_touched_sinew
-      spawn_chance: 0.6
-```
+### Arena Layout
 
----
+The arena should be compact and memorable:
+- campfire entrance edge
+- frozen creek crossing
+- tree-line pressure zone
+- one grounding landmark, such as a stone rise or deadfall
+- one dangerous low-visibility zone used during phase 2
 
-### Monster Behavior Script (Lua)
+This should feel like an N64 boss arena in clarity, with modern polish on top.
 
-```lua
--- wendigo_demo.lua
--- Demo-specific Wendigo behavior: teaches convergence and Phase 2 transition
+### Demo Flow
 
-local wendigo = {}
+**00:00 to 01:00, Preparation and Approach**
+- player starts at campfire
+- short line or environmental clue establishes that something is wrong
+- tutorialized but light interaction with Presence, brace, and Spirit Sight equivalent
+- footprints and frost signs lead forward
 
-function wendigo:on_spawn(entity)
-  entity.state = "patrol"
-  entity.patrol_radius = 20
-  entity.convergence_timer = 0
-  entity.player_visible = false
-end
+**01:00 to 02:00, Interpretation Phase**
+- Wendigo is seen only partially at first
+- player gets one or two safe chances to read posture and distance behavior
+- one clear tutorial prompt teaches the idea of Call and Response
 
-function wendigo:on_update(entity, dt, world)
-  local player = world:get_player()
-  local dist = entity:distance_to(player)
+**02:00 to 05:00, Phase 1 Combat**
+- convergence walk teaches dodge vs sidestep spacing
+- hunger pressure teaches Presence loss and grounding
+- one attack is best answered with brace
+- one punish window teaches counter strike timing
 
-  if entity.state == "patrol" then
-    -- Circle at edge of visibility
-    entity:patrol_circle(entity.patrol_radius)
-    
-    -- Demo hint: show Wendigo silhouette at edge of blizzard fog
-    if dist < 40 and dist > 25 then
-      entity:set_visibility("silhouette")  -- partial reveal
-    end
+**05:00 to 07:00, Phase 2 Shift**
+- whiteout or blizzard activates
+- Wendigo grows more aggressive
+- arena readability changes but does not collapse into visual sludge
+- player must use learned response language, not just raw reaction speed
 
-    -- Transition to convergence when player approaches or uses Spirit Sight
-    if dist < 25 or player:used_spirit_sight() then
-      entity.state = "convergence"
-      entity:play_sound("wendigo_awareness")
-    end
-    
-  elseif entity.state == "convergence" then
-    entity:move_toward(player, speed=2.5)  -- deceptively fast
-    entity.convergence_timer = entity.convergence_timer + dt
-    
-    -- Attack selection
-    if entity:in_attack_range(player, range=4) then
-      local attack = entity:select_attack({"freeze_breath", "hunger_grab", "convergence_walk"})
-      entity:execute_attack(attack, player)
-    end
-    
-  elseif entity.state == "phase2" then
-    entity:set_scale(1.3)  -- visually grows
-    entity:play_sound("wendigo_phase2_howl")
-    world:trigger_weather("blizzard_active")
-    entity.state = "phase2_combat"
-    
-  elseif entity.state == "phase2_combat" then
-    entity:move_toward(player, speed=3.0)
-    if entity:in_attack_range(player, range=5) then
-      local attack = entity:select_attack({"freeze_breath", "hunger_grab", "howl_of_winter", "convergence_walk"})
-      entity:execute_attack(attack, player)
-    end
-  end
-end
+**07:00 to End, Resolution**
+- kill, retreat, or clean partial success all count as meaningful outcomes for prototype purposes
+- short harvest interaction
+- codex or story-thread note unlock
+- return to campfire reflection beat
 
-function wendigo:on_hp_threshold(entity, threshold, world)
-  if threshold == 0.4 and entity.state ~= "phase2" then
-    entity.state = "phase2"
-    -- Brief cinematic pause — 1.5 seconds
-    world:pause_combat(1.5)
-    world:play_cutscene("wendigo_growth")
-  end
-  
-  if threshold == 0.0 then
-    entity.state = "dead"
-    world:trigger_harvest_window(entity, duration=90)
-    world:play_sound("wendigo_death")
-    world:weather_transition("clearing")
-  end
-end
+### What the demo proves
 
-function wendigo:on_player_stationary(entity, duration, world)
-  -- Wendigo is drawn to stillness — escalates threat
-  if duration > 5 then
-    entity:increase_aggression(0.1)
-  end
-end
-
-return wendigo
-```
-
----
-
-### Demo Flow — Beat by Beat
-
-**00:00 — Scene Opens**
-The Seeker stands at the campfire at dusk. Light snow. The campfire is lit. Tutorial text (can be dismissed): "Your camp. Your fire. Something is wrong with the forest tonight."
-
-**00:15 — Campfire Interaction**
-Player approaches campfire. Craft menu shows one recipe: Cold Ward Wrap (requires 2x Pine Resin — harvestable nearby). Tutorial: craft the item for passive cold resistance. This teaches the crafting interface.
-
-**01:00 — Tracking Phase**
-Wendigo prints appear on the approach path (large, barefoot, human-shaped, enormous). Sound design: distant creak of tree, unnaturally cold breath. Tutorial: "Follow the signs."
-
-**01:30 — First Contact**
-Wendigo silhouette visible at 30 units, circling. Spirit Sight tutorial: hold key/button to reveal weak points (ribcage, exposed joints marked). Player approaches and the Wendigo enters convergence state.
-
-**02:00 — Phase 1 Combat**
-Full combat begins. The demo encounter is designed to introduce: dodge and counter window (Wendigo's Convergence Walk is slow enough to teach this), Freeze Breath (teaches stamina management — i-frames stripped), Hunger Grab (teaches interrupt window — Ground Anchor parry on Spirit Lance is the intended counter).
-
-**03:00 — Phase 2 Transition**
-At 40% HP, Phase 2 triggers. Blizzard activates — visibility drops. Wendigo grows. New sound design. Tutorial note: fire-type attacks deal bonus damage now.
-
-**04:00 — Phase 2 Combat**
-Howl of Winter introduces the 8-second whiteout — player navigates by memory and sound. Torch consumable can be used to create a fire zone (teaches consumable utility). Spirit Ability (unlocked from Spirit Mark earned mid-fight): one-use ability from earlier run knowledge (demo gives the player one pre-bonded ability: Thunderbird Dive as a dramatic finisher option).
-
-**04:30 — Kill / Harvest**
-Wendigo death animation. Harvest window opens: 90 seconds. Two guaranteed nodes, one conditional rare node. Tutorial: different harvest nodes, time pressure.
-
-**05:00 — Demo End State**
-Harvest completes. Codex entry for Wendigo unlocks. Credits roll with the Codex text displayed. Demo loop-back to main menu with prompt: "The forest has more to teach."
-
----
-
-### What the Demo Proves
-
-1. ✅ Core combat feel — dodge/counter rhythm, stamina management
-2. ✅ Monster phase system — P1 → P2 transition, behavior change
-3. ✅ Spirit Sight functionality — reveal system
-4. ✅ Weather as gameplay — blizzard visibility, fire utility
-5. ✅ Crafting interface — one recipe, clear UI
-6. ✅ Harvest system — timed window, multiple nodes
-7. ✅ Codex / tone — lore delivery, respectful framing
-8. ✅ Tone and visual style — first impression of the world
-
----
-
-## Appendix: Open Questions & Production Gates
-
-### Research/Consultation Required Before Public Demo
-
-- [ ] Engage at least one Ojibwe/Anishinaabe cultural consultant for Wendigo and Mishipeshu entries
-- [ ] Engage at least one Navajo/Diné consultant for Skinwalker/Yee Naaldlooshii entry
-- [ ] Engage at least one Lakota consultant for Seeker lineage and Great Plains biome
-- [ ] Review all Codex text with relevant consultants before any external showing
-- [ ] Confirm Bear Walker terminology is appropriate with Ojibwe/Potawatomi consultants
-- [ ] Arctic biome creature roster requires full research pass before design work begins
-
-### Design Questions Open
-
-- [ ] What is the right name for the player character's role? "Seeker" is a placeholder; consult on appropriate terminology
-- [ ] Exact Keeper's Fire meta-hub design — UI approach for between-run space
-- [ ] Companion NPC? Some Monster Hunter-style games have village characters; would this work in the Thunderwalker framing?
-- [ ] Multiplayer/co-op scope — out of scope for MVP but worth designing for from the start if desired
-- [ ] Platform targets — PC first, console later? Mobile excluded?
-
-### nAIVE Engine Dependencies
-
-- [ ] Confirm physics system supports ice/terrain deformation (frozen creek crack mechanic)
-- [ ] Confirm audio system supports positional monster sounds with occlusion
-- [ ] Confirm Lua can access weather state for monster behavior scripts
-- [ ] Confirm YAML scene format supports linked harvest nodes
-- [ ] Profile combat hitbox system at expected monster scale (Wendigo is 3x human height)
-
----
-
-*Document version 0.1 — Pre-production. All designs subject to revision based on cultural consultation, playtesting, and engine capability development.*
-
-*This document is confidential and intended for internal development use only.*
+1. readable encounter-first combat
+2. Presence as a real behavior-shaping resource
+3. Medicine / Trick / Trial as the game's combat grammar
+4. N64-ish clarity as a strength, not a compromise
+5. Thunderwalker as something meaningfully different from Soulslike combat and card battlers

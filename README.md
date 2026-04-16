@@ -62,6 +62,22 @@ The build produces three binaries in `target/release/`:
 
 ## Quick Start
 
+### Clone correctly
+
+```bash
+git clone --recursive https://github.com/BetterCodeGoblin/nAIVE.git
+cd nAIVE
+```
+
+If you already cloned without submodules:
+
+```bash
+git submodule update --init --recursive
+```
+
+For Thunderwalker-specific setup and notes, see `docs/THUNDERWALKER_CLONE_SETUP.md` and `docs/THUNDERWALKER_UE5_SLICE.md`.
+
+
 ```bash
 # Create a new project
 naive init my-game
